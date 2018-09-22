@@ -7,5 +7,9 @@ struct TrackDuration {
     unsigned int seconds;
 } ;
 
+enum PlaybackMode {
+    Normal, Shuffle, Repeat, ShuffleAndRepeat
+};
+
 
 #endif

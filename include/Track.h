@@ -12,7 +12,8 @@ private:
     string url;
     string trackId;
     TrackDuration duration;
-
+    string thumbUrl;
+    
 public:
     Track(const string & trackId)
         : trackId(trackId) {}
@@ -47,6 +48,13 @@ public:
     }
     void setDuration(const TrackDuration & duration) {
         this->duration = duration;
+    }
+    
+    void setThumbUrl(const string & thumbUrl) {
+        this->thumbUrl = thumbUrl;
+    }
+    string getThumbUrl() {
+        return thumbUrl;
     }
 };
 

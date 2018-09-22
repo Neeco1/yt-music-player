@@ -7,9 +7,8 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		37E1AE5F2120C11500704FA7 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = bin; sourceTree = "<group>"; };
+		370D26C8212347BE0073C90F /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 		37E1AE602120C11500704FA7 /* build */ = {isa = PBXFileReference; lastKnownFileType = folder; path = build; sourceTree = "<group>"; };
-		37E1AE612120C11500704FA7 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 		37E1AE622120C11500704FA7 /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		37E1AE632120C11500704FA7 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
 		37E1AE642120C11500704FA7 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -22,7 +21,6 @@
 		37E1AE4C2120C0E100704FA7 = {
 			isa = PBXGroup;
 			children = (
-				37E1AE5F2120C11500704FA7 /* bin */,
 				37E1AE602120C11500704FA7 /* build */,
 				37E1AE672120C28B00704FA7 /* CMakeLists.txt */,
 				37E1AE622120C11500704FA7 /* doc */,
@@ -30,7 +28,7 @@
 				37E1AE632120C11500704FA7 /* lib */,
 				37E1AE682120C5B400704FA7 /* main.cpp */,
 				37E1AE642120C11500704FA7 /* README.md */,
-				37E1AE612120C11500704FA7 /* src */,
+				370D26C8212347BE0073C90F /* src */,
 			);
 			sourceTree = "<group>";
 		};

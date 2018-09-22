@@ -1,6 +1,7 @@
 #include "WebSocketPlayer.h"
 
-int main() {
+int main(int argc, char * argv[]) {
+
     WebSocketPlayer player(8080);
     std::thread playerThread = player.start();
     playerThread.join();
