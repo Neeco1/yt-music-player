@@ -1,68 +1,61 @@
 #ifndef PLAYLIST_H__
 #define PLAYLIST_H__
 
+class Playlist;
+
 #include <vector>
+#include <algorithm>
+#include <memory>
+#include <sstream>
 #include "Track.h"
 #include "Types.h"
+#include "jsoncpp/json/json.h"
+#include "Utils.h"
 
 class Playlist {
-using string = std::string;
 
-private:
-    string listId;
-    string name;
-    std::vector<Track> tracks;
-    bool nowPlaying;
-    int currentTrack;
+protected:
+    std::string listId;
+    std::string name;
+    std::vector<std::shared_ptr<Track>> tracks;
+    std::vector<std::shared_ptr<Track>> shuffledOrder;
     PlaybackMode playbackMode;
+    int currentTrack;
+    bool nowPlaying;
+    bool nowPaused;
 
 public:
-    Playlist() {}
+    Playlist();
+    
     //Virtual destructor for base class to avoid resource leaks
     virtual ~Playlist() {}
     
-    void setListId(const string & listId) {
-        this->listId = listId;
-    }
+    void setListId(const std::string & listId);
+    std::string getListId();
     
-    void setName(const string & name) {
-        this->name = name;
-    }
-    const string & getName() {
-        return name;
-    }
+    void setName(const std::string & name);
+    const std::string & getName();
     
-    void addTrack(const Track & track) {
-        tracks.push_back(track);
-    }
+    void addTrack(const std::shared_ptr<Track> track);
     
-    void setPlaybackMode(PlaybackMode playbackMode) {
-        this->playbackMode = playbackMode;
-    }
+    void setPlaybackMode(PlaybackMode playbackMode);
+    const std::vector<std::shared_ptr<Track>> & getAllTracks() const;
+    const int getTrackCount() const;
+    bool isPlaying() const;
+    bool isPaused() const;
     
-    const std::vector<Track> & getAllTracks() const {
-        return tracks;
-    }
+    int getCurrentTrackNumber();
+    std::shared_ptr<Track> getCurrentTrack();
     
-    const int getTrackCount() const {
-        return tracks.size();
-    }
-    
-    bool isPlaying() const {
-        return this->nowPlaying;
-    }
-    
-    int getCurrentTrack() {
-        return this->currentTrack;
-    }
-    
-    bool startPlaying() {
-        playTrack(0);
-    }
+    bool startPlaying();
     
     //Virtual method. Subclasses define here how a track can be played and stopped
     virtual void playTrack(int trackIndex) = 0;
+    virtual void playList() = 0;
     virtual void stopPlayback() = 0;
+    virtual void pausePlayback() = 0;
+    
+    virtual Json::Value getJson() = 0;
     
 };
 

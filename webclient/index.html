@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+<link rel="stylesheet" type="text/css" href="style.css"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+  integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+  crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+</script>
+
+<script type="text/javascript">
+var wsConn;
+var reconnectInterval;
+var playbackStateInterval;
+var playlists;
+var currentPlaylistId;
+
+function setupWebsocketConnection() {
+    wsConn = new WebSocket('ws://'+window.location.hostname+':8080/action');
+    wsConn.onopen = handleWsOpen;
+    wsConn.onerror = handleWsError;
+    wsConn.onclose = handleWsClose;
+    wsConn.onmessage = handleWsMessage;
+}
+
+function handleWsOpen(e) {
+    document.getElementById("connection_lost").style.display="none";
+
+    clearInterval(reconnectInterval);
+    //Load playlists
+    wsConn.send('{ "cmd" : "get_playlists", "data" : {} }');
+    //Get current volume
+    wsConn.send('{ "cmd" : "get_volume", "data" : {} }');
+
+    playbackStateInterval = window.setInterval(function() {
+        wsConn.send('{ "cmd" : "get_playback_info", "data" : {} }');
+    }, 1000);
+}
+
+function handleWsError(error) {
+    console.log('WebSocket Error ' + error);
+}
+
+function handleWsClose(e) {
+    window.clearInterval(playbackStateInterval);
+    wsConn = null;
+    reconnectInterval = setInterval(setupWebsocketConnection, 5000);
+    hideNowPlaying();
+    document.getElementById("connection_lost").style.display="block";
+}
+
+function handleWsMessage(e) {
+    if(!e.data) { return; }
+    var jsonMsg = JSON.parse(e.data);
+
+    //Check for a valid message
+    if(jsonMsg == null || !jsonMsg.data || (jsonMsg.error == undefined)) { return; }
+    //Handle errors
+    if(jsonMsg.error == 1)
+    {
+        if(jsonMsg.data.status === "playlist_fetch_failed")
+        {
+            var removeBlock = document.getElementById("playlist"+jsonMsg.data.playlist_id);
+            blockContainer.removeChild(removeBlock);
+            showNotification("Playlist download failed.");
+        }
+        return;
+    }
+    //Handle data
+    if(jsonMsg.data.status === "playlists")
+    {
+        playlists = jsonMsg.data.playlists;
+        showPlaylists();
+    }
+    if(jsonMsg.data.status === "playlist_add_in_progress")
+    {
+        var playlist = jsonMsg.data;
+        blockContainer.appendChild(playlistToDom(playlist, true));
+        return;
+    }
+    if(jsonMsg.data.status === "playlist_add_done")
+    {
+        var playlist = jsonMsg.data.playlist;
+        var playlistDiv = document.getElementById("playlist"+playlist.id);
+        //Check if "loading playlist block" is found
+        if(playlistDiv)
+        {
+            var overlayToRemove = playlistDiv.getElementsByClassName("progress_overlay")[0];
+            playlistDiv.removeChild(overlayToRemove);
+        }
+        else
+        {
+            //Not found, so create new one
+            blockContainer.appendChild(playlistToDom(playlist, false));
+        }
+
+        return;
+    }
+    if(jsonMsg.data.status === "playlist_selected")
+    {
+        startPlaying();
+        var listId = jsonMsg.data.playlist_id;
+        try
+        {
+            document.getElementById("playlist"+currentPlaylistId).classList.remove("now_playing");
+        } catch(e) {} //Catch, if nothing is selected
+        currentPlaylistId = listId;
+        document.getElementById("playlist"+listId).classList.add("now_playing");
+        return;
+    }
+    if(jsonMsg.data.status === "playback_info")
+    {
+        var info = jsonMsg.data.playback_info;
+        document.getElementById("now_playing_title").innerHTML = info.title;
+        document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
+        if(info.state === "playing" || info.state === "paused")
+        {
+            showNowPlaying();
+        }
+        else
+        {
+            hideNowPlaying();
+        }
+        return;
+    }
+    if(jsonMsg.data.status === "playback_stopped")
+    {
+        try
+        {
+            document.getElementById("playlist"+currentPlaylistId).classList.remove("now_playing");
+            return
+        }
+        catch(e) {}
+        return;
+    }
+}
+
+function showNotification(message) {
+    //TODO
+}
+
+function initGui() {
+    var playlistNameInput = document.getElementById("playlist_name");
+    var playlistUrlInput = document.getElementById("playlist_url");
+
+    var circleDiv = document.getElementById("circle");
+    circleDiv.addEventListener("touchstart", function()
+    {
+        circleDiv.style.backgroundColor = "#CCA83B";
+    });
+    circleDiv.addEventListener("mousedown", function()
+    {
+        circleDiv.style.backgroundColor = "#CCA83B";
+    });
+    circleDiv.addEventListener("mouseup", function()
+    {
+        circleDiv.style.backgroundColor = "#FFB035";
+    });
+    circleDiv.addEventListener("click", function() {
+        overlay.style.display="block";
+    });
+
+    var overlayClose = document.getElementById("overlay_close");
+    var overlay = document.getElementById("overlay");
+    function closeOverlay() {
+        overlay.style.display = "none";
+        playlistNameInput.value = "";
+        playlistUrlInput.value = "";
+    }
+    overlayClose.addEventListener("click", closeOverlay);
+
+
+    //Volume slider component
+    var volSlider = document.getElementById("volume_slider");
+    var volSliderFunction = function() {
+        wsConn.send('{ "cmd" : "set_volume", "data" : {"volume":'+volSlider.value+'} }');
+    }
+    volSlider.addEventListener("touchend", volSliderFunction);
+    volSlider.addEventListener("mouseup", volSliderFunction);
+
+    //Overlay button component
+    var newPlaySendBtn = document.getElementById("sendform_button");
+    var newPlayForm = document.getElementById("newPlayForm");
+    var sendPlaylistURL = function() {
+        newPlaySendBtn.setAttribute("disabled", "disabled");
+        var playlistUrl = playlistUrlInput.value.trim();
+        var playlistName = playlistNameInput.value.trim();
+        wsConn.send('{ "cmd" : "add_playlist", '
+            + '"data" : {"playlist_url":"'+playlistUrl+'", "name":"'+playlistName+'"} }');
+        closeOverlay();
+        newPlaySendBtn.removeAttribute("disabled");
+    }
+    newPlayForm.addEventListener("submit", function(e) {
+        sendPlaylistURL();
+        e.preventDefault();
+        return false;
+    });
+    newPlaySendBtn.removeAttribute("disabled");
+}
+
+function showNowPlaying() {
+    document.getElementById("playback_info").style.display="table-cell";
+}
+function hideNowPlaying() {
+    document.getElementById("playback_info").style.display="none";
+}
+
+window.onload = function() {
+    setupWebsocketConnection();
+
+    blockContainer = document.getElementById("block_container");
+    initGui();
+}
+
+function playlistToDom(playlist, in_progress) {
+    var blockDiv = document.createElement("div");
+    blockDiv.setAttribute("class", "playlist_block");
+    if(playlist.playing)
+    {
+        currentPlaylistId = playlist.id;
+        blockDiv.classList.add("now_playing");
+    }
+    blockDiv.setAttribute("id", "playlist"+playlist.id);
+    blockDiv.style.backgroundColor = getRandomColor();
+
+    if(in_progress) {
+        var progressDiv = document.createElement("div");
+        progressDiv.setAttribute("class", "progress_overlay");
+        var loaderDiv1 = document.createElement("div");
+        loaderDiv1.classList.add("lds-css");
+        loaderDiv1.classList.add("ng-scope");
+        var loaderDiv2 = document.createElement("div");
+        loaderDiv2.style.width = "60px";
+        loaderDiv2.style.height = "60px";
+        loaderDiv2.classList.add("lds-eclipse");
+        loaderDiv2.appendChild(document.createElement("div"));
+        loaderDiv1.appendChild(loaderDiv2);
+        progressDiv.appendChild(loaderDiv1);
+        blockDiv.appendChild(progressDiv);
+    }
+
+    var subDiv = document.createElement("div");
+    subDiv.setAttribute("class", "block_content");
+    var link = document.createElement("a");
+    link.setAttribute("class", "title");
+    link.setAttribute("href", "#");
+    link.addEventListener("click", function() {
+        wsConn.send('{ "cmd" : "select_playlist", "data" : {"playlist_id" : "'+playlist.id+'" } }');
+    });
+    var span = document.createElement("span");
+    span.innerHTML = playlist.name;
+    link.appendChild(span);
+    subDiv.appendChild(link);
+    blockDiv.appendChild(subDiv);
+
+    return blockDiv;
+}
+
+function showPlaylists() {
+    blockContainer.innerHTML = "";
+    for (var list_id in playlists)
+    {
+        blockContainer.appendChild(playlistToDom(playlists[list_id], false));
+    }
+}
+
+function playList(list_id) {
+    if(list_id.trim() === "") return;
+    wsConn.send('{ "cmd" : "select_playlist", "data" : {"playlist_id" : "'+list_id+'" } }');
+}
+
+function startPlaying() {
+    wsConn.send('{ "cmd" : "play", "data" : {}}');
+    showNowPlaying();
+}
+function stopPlaying() {
+    wsConn.send('{ "cmd" : "stop", "data" : {}}');
+    hideNowPlaying();
+}
+function pausePlaying() {
+    wsConn.send('{ "cmd" : "pause", "data" : {}}');
+}
+
+</script>
+
+</head>
+<body>
+
+<h1>WGay Music Player</h1>
+<div id="button_container">
+    0% <input type="range" min="60" max="100" value="80" class="slider" id="volume_slider"> 100%
+    <br />
+    <br />
+    <a href="#" onclick="previousTrack()"><i class="material-icons">skip_previous</i></a>
+    <a href="#" onclick="startPlaying()"><i class="material-icons">play_circle_outline</i></a>&nbsp;
+    <a href="#" onclick="stopPlaying()"><i class="material-icons">stop</i></a>&nbsp;
+    <a href="#" onclick="pausePlaying()"><i class="material-icons">pause_circle_filled</i></a>
+    <a href="#" onclick="nextTrack()"><i class="material-icons">skip_next</i></a>
+</div>
+
+<div id="block_container">
+</div>
+<div id="add_button">
+    <div id="circle">
+        <span>+</span>
+    </div>
+</div>
+
+
+<div id="overlay">
+    <div id="overlay_bar">
+    </div>
+    <div id="overlay_content">
+        <p>Neue Playlist hinzuf&uuml;gen</p>
+        <form name="newlist" id="newPlayForm" onsubmit="event.preventDefault();">
+            <b>Name:</b> <input type="text" name="playlist_name" id="playlist_name"/><br/><br/>
+            <b>Link:</b> <input type="text" name="playlist_url" id="playlist_url"/><br />
+            <input type="submit" value="Hinzuf&uuml;gen" id="sendform_button" disabled="disabled"/>
+        </form>
+        <button id="overlay_close">Fertig</button>
+    </div>
+
+</div>
+
+<div id="playback_info" style="display:none">
+    <img id="now_playing_thumb" />
+    <div id="now_playing_title"></div>
+</div>
+
+<div id="connection_lost" style="display:none;">
+    <div>Connection lost. Reconnecting...</div>
+</div>
+
+
+</body>
+</html>

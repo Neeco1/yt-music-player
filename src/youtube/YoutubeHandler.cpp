@@ -4,41 +4,54 @@
 #include <thread>
 #include <iostream>
 #include <sstream>
+#include <memory>
 #include "Utils.h"
 #include "jsoncpp/json/json.h"
 #include "EventBus/EventBus.hpp"
 #include "events/NewPlaylistReadyEvent.h"
+#include "events/NewPlaylistFetchFailedEvent.h"
 
-void YoutubeHandler::fetchPlaylistInfo(std::string playlistId) {
+void YoutubeHandler::fetchPlaylistInfo(std::string playlistId, std::string name) {
     try {
         std::stringstream command;
-        command << "youtube-dl " << playlistId << " -J";
+        command << "youtube-dl " << playlistId << " -J -i ";
         std::string cmdStr = command.str();
         std::string result = Utils::execCommand(cmdStr);
-    
+        
         //Parse the JSON
         Json::Value jsonData;
         Json::Reader reader;
         bool success = reader.parse(result.c_str(), jsonData);
         if(!success || !jsonData.isMember("entries"))
         {
-            //TODO: Publish failure event
+            //Publish failure event
+            NewPlaylistFetchFailedEvent e(*this, playlistId);
+            EventBus::FireEvent(e);
             return;
         }
         Json::Value trackEntries = jsonData["entries"];
         
         //Create a new YT Playlist object
-        auto ytpl = std::make_shared<YoutubePlaylist>();
+        std::string listUrl = "https://youtube.com/playlist?list=" + playlistId;
+        auto ytpl = std::make_shared<YoutubePlaylist>(listUrl);
         ytpl->setListId(playlistId);
-        ytpl->setName(jsonData["title"].asString());
+        //Set the name
+        if(name.compare("") == 0)
+        {
+            ytpl->setName(jsonData["title"].asString());
+        }
+        else
+        {
+            ytpl->setName(name);
+        }
         
         for(auto track : trackEntries)
         {
-            Track curTrack(track["id"].asString());
-            curTrack.setName(track["title"].asString());
-            curTrack.setDuration(Utils::secondsToTrackDuration(track["duration"].asUInt()));
-            curTrack.setUrl(track["webpage_url"].asString());
-            curTrack.setThumbUrl(track["thumbnail"].asString());
+            auto curTrack = std::make_shared<Track>(track["id"].asString());
+            curTrack->setName(track["title"].asString());
+            curTrack->setDuration(Utils::secondsToTrackDuration(track["duration"].asUInt()));
+            curTrack->setUrl(track["webpage_url"].asString());
+            curTrack->setThumbUrl(track["thumbnail"].asString());
             
             ytpl->addTrack(curTrack);
         }
@@ -48,15 +61,16 @@ void YoutubeHandler::fetchPlaylistInfo(std::string playlistId) {
         EventBus::FireEvent(e);
         
     }
-    catch(Json::LogicError & error)
+    catch(...)
     {
-        //TODO: Publish failure event
-        std::cout << "Json error occurred!" << std::endl;
+        //Publish failure event
+        NewPlaylistFetchFailedEvent e(*this, playlistId);
+        EventBus::FireEvent(e);
     }
 }
 
-void YoutubeHandler::newPlaylist(std::string & playlistId) {
-    std::thread t(&YoutubeHandler::fetchPlaylistInfo, this, playlistId);
+void YoutubeHandler::newPlaylist(std::string & playlistId, std::string & name) {
+    std::thread t(&YoutubeHandler::fetchPlaylistInfo, this, playlistId, name);
     t.detach();
 }
 

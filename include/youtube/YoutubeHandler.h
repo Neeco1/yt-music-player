@@ -13,10 +13,10 @@ private:
      * This is an asynchronous task, which will result in an eventbus event
      * called "PlaylistAdded"
      */
-    void fetchPlaylistInfo(std::string playlistId);
+    void fetchPlaylistInfo(std::string playlistId, std::string name);
 
 public:
-    void newPlaylist(std::string & playlistId);
+    void newPlaylist(std::string & playlistId, std::string & name);
     void fetchTrackInfo(std::string & trackId);
     
 };
