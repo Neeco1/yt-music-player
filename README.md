@@ -4,7 +4,7 @@ A music player using websockets. Currently supports youtube tracks and playlists
 to add support for more services.
 
 ### Youtube Plugin:
-- Uses (https://mpv.io)[`mpv` player] in socket mode (using `--input-ipc-server=/tmp/mpvsocket`)
+- Uses [`mpv` player](https://mpv.io) in socket mode (using `--input-ipc-server=/tmp/mpvsocket`)
 - Uses `youtube-dl` to fetch playlist and video information
 
 ## Setup
