@@ -12,7 +12,7 @@ to add support for more services.
 - Install necessary packages: ``sudo apt-get install -y python python3-pip mpv socat``
 - Install youtube-dl: ``pip install youtube-dl``
 - Go to directory of the repository: ``git clone https://github.com/Neeco1/yt-music-player`` and ``cd yt-music-player``
-- ``cd build``
+- ``mkdir build && cd build``
 - ``cmake ..``
 - ``make``
 - ``./MusicPlayerService
