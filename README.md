@@ -15,7 +15,7 @@ to add support for more services.
 - ``mkdir build && cd build``
 - ``cmake ..``
 - ``make``
-- ``./MusicPlayerService
+- ``./MusicPlayerService``
 
 ## Websocket API for Communication
 
