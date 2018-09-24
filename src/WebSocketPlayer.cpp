@@ -166,6 +166,14 @@ void WebSocketPlayer::initCommandEndpoint() {
         {
             responseJson = getPlaybackInfo();
         }
+        else if(command.compare("nextTrack") == 0)
+        {
+            responseJson = nextTrack();
+        }
+        else if(command.compare("previousTrack") == 0)
+        {
+            responseJson = previousTrack();
+        }
         else
         {
             responseJson["error"] = 1;
@@ -198,7 +206,6 @@ Json::Value WebSocketPlayer::start() {
     Json::Value responseJson;
     if(player.startPlayback())
     {
-        std::cout << "Playback started!" << std::endl;
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "playback_started";
     }
@@ -216,6 +223,36 @@ Json::Value WebSocketPlayer::pause() {
     {
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "playback_paused";
+    }
+    else
+    {
+        responseJson["error"] = 1;
+        responseJson["data"]["errorCode"] = "PLAYER_ERROR";
+    }
+    return responseJson;
+}
+
+Json::Value WebSocketPlayer::nextTrack() {
+    Json::Value responseJson;
+    if(player.nextTrack())
+    {
+        responseJson["error"] = 0;
+        responseJson["data"]["status"] = "next_track";
+    }
+    else
+    {
+        responseJson["error"] = 1;
+        responseJson["data"]["errorCode"] = "PLAYER_ERROR";
+    }
+    return responseJson;
+}
+
+Json::Value WebSocketPlayer::previousTrack() {
+    Json::Value responseJson;
+    if(player.previousTrack())
+    {
+        responseJson["error"] = 0;
+        responseJson["data"]["status"] = "previous_track";
     }
     else
     {
@@ -316,6 +353,22 @@ Json::Value WebSocketPlayer::getPlaybackInfo() {
     pbInfo["track_id"] = info.trackId;
     pbInfo["thumb_url"] = info.thumbUrl;
     
+    switch(info.playbackMode)
+    {
+        case Shuffle:
+            pbInfo["playback_mode"] = "shuffle";
+            break;
+            
+        case Repeat:
+            pbInfo["playback_mode"] = "repeat";
+            break;
+            
+        case Normal:
+        default:
+            pbInfo["playback_mode"] = "normal";
+            break;
+    }
+    
     Json::Value responseJson;
     responseJson["error"] = 0;
     responseJson["data"]["status"] = "playback_info";
@@ -343,7 +396,6 @@ void WebSocketPlayer::onEvent(NewPlaylistReadyEvent & e) {
 }
 
 void WebSocketPlayer::onEvent(NewPlaylistFetchFailedEvent & e) {
-    std::cout << "Received fetch failed event..." << std::endl;
     //Notify all clients that the fetch of data failed
     Json::Value responseJson;
     responseJson["error"] = 1;

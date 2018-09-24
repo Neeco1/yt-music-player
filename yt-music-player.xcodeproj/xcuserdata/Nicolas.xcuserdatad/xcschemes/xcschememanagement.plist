@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>yt-music-player-doc.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>yt-music-player.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -12,6 +17,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>37732EBB2159487B00EBCB57</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>37E1AE512120C0E100704FA7</key>
 		<dict>
 			<key>primary</key>

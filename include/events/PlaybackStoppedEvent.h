@@ -1,11 +1,14 @@
 #ifndef PLAYBACK_STOPPED_EVENT_H__
 #define PLAYBACK_STOPPED_EVENT_H__
 
+#include "EventBus/Object.hpp"
+#include "EventBus/Event.hpp"
+
 class PlaybackStoppedEvent : public Event
 {
 public:
-    PlaybackStoppedEvent(std::string const & msg) :
-    Event(nullptr),
+    PlaybackStoppedEvent(Object & sender, std::string const & msg) :
+    Event(sender),
     msg(msg) {
     }
 

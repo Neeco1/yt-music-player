@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <iostream>
 #include "Track.h"
 #include "Types.h"
 #include "jsoncpp/json/json.h"
@@ -49,7 +50,7 @@ const std::vector<std::shared_ptr<Track>> & Playlist::getAllTracks() const {
     return tracks;
 }
 
-const int Playlist::getTrackCount() const {
+const unsigned int Playlist::getTrackCount() const {
     return tracks.size();
 }
 
@@ -60,7 +61,7 @@ bool Playlist::isPaused() const {
     return nowPaused;
 }
 
-int Playlist::getCurrentTrackNumber() {
+unsigned int Playlist::getCurrentTrackNumber() {
     return this->currentTrack;
 }
 
@@ -70,5 +71,28 @@ std::shared_ptr<Track> Playlist::getCurrentTrack() {
 
 bool Playlist::startPlaying() {
     playTrack(currentTrack);
+}
+
+std::shared_ptr<Track> Playlist::nextTrack() {
+    unsigned int trackCount = getTrackCount();
+    unsigned int curTrackNumber = getCurrentTrackNumber();
+    ++curTrackNumber;
+    if(curTrackNumber >= trackCount) {
+        return getCurrentTrack();
+    }
+    this->currentTrack = curTrackNumber;
+    playTrack(curTrackNumber);
+    return getCurrentTrack();
+}
+std::shared_ptr<Track> Playlist::previousTrack() {
+    int curTrackNumber = getCurrentTrackNumber();
+    //Check if we are already at the beginning
+    if(curTrackNumber > 0) {
+        --curTrackNumber;
+        //Save value to class member
+        currentTrack = curTrackNumber;
+        playTrack(currentTrack);
+    }
+    return getCurrentTrack();
 }
 

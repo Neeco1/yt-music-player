@@ -3,13 +3,17 @@
 #include <iostream>
 #include "jsoncpp/json/json.h"
 #include <stdlib.h>
+#include <thread>
+#include <chrono>
+#include "MPV_Controller.h"
+#include "events/PlaybackStoppedEvent.h"
 
 YoutubePlaylist::YoutubePlaylist(std::string playlistUrl)
-: Playlist(), playlistUrl(playlistUrl)
+: Playlist(), playlistUrl(playlistUrl), stopPlaybackFlag(false)
 { }
 
 YoutubePlaylist::YoutubePlaylist(Json::Value json)
-: Playlist()
+: Playlist(), stopPlaybackFlag(false)
 {
     setListId(json["id"].asString());
     setName(json["name"].asString());
@@ -25,65 +29,64 @@ void YoutubePlaylist::setPlaylistUrl(std::string playlistUrl) {
 }
 
 void YoutubePlaylist::playTrack(int trackIndex) {
-    if(isPlaying() || isPaused())
-    {
-        stopPlayback();
-    }
-    
     auto track = tracks[trackIndex];
-    
-    std::stringstream ssCmd;
-    ssCmd << "mpv --no-video "
-          << track->getUrl()
-          << " --input-ipc-server=/tmp/mpvsocket"
-          << " 2>&1";
-    std::shared_ptr<FILE> pipe(popen(ssCmd.str().c_str(), "r"));
+    MPV_Controller::playMedia(track->getUrl());
     nowPlaying = true;
+    stopPlaybackFlag = false;
 }
 
 void YoutubePlaylist::stopPlayback() {
-    std::string command("echo '{ \"command\": [\"stop\"] }' | socat - /tmp/mpvsocket");
-    std::shared_ptr<FILE> pipe(popen(command.c_str(), "r"), pclose);
+    //stopPlaybackFlag = true;
+    MPV_Controller::setProperty("cmdStopPlayback");
+    if(!isPlaying())
+    {
+        currentTrack = 0;
+    }
     nowPlaying = false;
+    stopPlaybackFlag = true;
 }
 
 void YoutubePlaylist::playList() {
     //Resume if paused
     if(isPaused())
     {
-        std::string command("echo '{ \"command\": [\"set_property\", \"pause\", false] }' | socat - /tmp/mpvsocket");
-        std::shared_ptr<FILE> pipe(popen(command.c_str(), "r"), pclose);
+        MPV_Controller::setProperty("cmdUnpausePlayback");
         nowPaused = false;
         nowPlaying = true;
         return;
     }
     
     //If not paused, start playing
-    std::stringstream ssCmd;
-    ssCmd << "mpv --no-video " << playlistUrl << " --input-ipc-server=/tmp/mpvsocket ";
-    if(playbackMode == Shuffle)
-    {
-        ssCmd << "--shuffle";
-    }
-    else if(playbackMode == Repeat)
-    {
-        ssCmd << "--loop-playlist";
-    }
-    else if(playbackMode == ShuffleAndRepeat)
-    {
-        ssCmd << "--shuffle --loop-playlist";
-    }
-    ssCmd << " &";
-    
-    std::string cmd = ssCmd.str();
-    system(cmd.c_str());
-    
+    startPlaying();
+    stopPlaybackFlag = false;
     nowPlaying = true;
 }
 void YoutubePlaylist::pausePlayback() {
-    std::string command("echo '{ \"command\": [\"set_property\", \"pause\", true] }' | socat - /tmp/mpvsocket");
-    std::shared_ptr<FILE> pipe(popen(command.c_str(), "r"), pclose);
+    MPV_Controller::setProperty("cmdPausePlayback");
     nowPaused = true;
+}
+
+void YoutubePlaylist::startPlaying() {
+    playTrack(currentTrack);
+    std::thread playbackThread([this] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        while(!stopPlaybackFlag)
+        {
+            int remainingTime = MPV_Controller::getPropertyAsInt("cmdGetRemainingTime");
+            std::cout << "Remaining time: " << remainingTime << std::endl;
+            if(remainingTime == 0)
+            {
+                nextTrack();
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+        }
+        MPV_Controller::setProperty("cmdStopPlayback");
+        
+        //Publish new event that playback stopped
+        PlaybackStoppedEvent e(*this, "stopped");
+        EventBus::FireEvent(e);
+    });
+    playbackThread.detach();
 }
 
 Json::Value YoutubePlaylist::getJson() {

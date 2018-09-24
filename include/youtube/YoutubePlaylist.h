@@ -4,14 +4,16 @@
 class Playlist;
 
 #include "Playlist.h"
-#include <thread>
 #include <string>
+#include <atomic>
 #include "jsoncpp/json/json.h"
 
 class YoutubePlaylist : public Playlist {
 private:
     std::string playlistUrl;
-    const std::string mpvSocketUrl = "/tmp/mpvsocket";
+    std::atomic<bool> stopPlaybackFlag;
+    
+    void startPlaying();
     
 public:
     YoutubePlaylist(std::string playlistUrl);

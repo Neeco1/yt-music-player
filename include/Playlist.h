@@ -11,8 +11,10 @@ class Playlist;
 #include "Types.h"
 #include "jsoncpp/json/json.h"
 #include "Utils.h"
+#include "EventBus/Object.hpp"
+#include "EventBus/EventBus.hpp"
 
-class Playlist {
+class Playlist : public Object  {
 
 protected:
     std::string listId;
@@ -40,14 +42,16 @@ public:
     
     void setPlaybackMode(PlaybackMode playbackMode);
     const std::vector<std::shared_ptr<Track>> & getAllTracks() const;
-    const int getTrackCount() const;
+    const unsigned int getTrackCount() const;
     bool isPlaying() const;
     bool isPaused() const;
     
-    int getCurrentTrackNumber();
+    unsigned int getCurrentTrackNumber();
     std::shared_ptr<Track> getCurrentTrack();
     
     bool startPlaying();
+    std::shared_ptr<Track> nextTrack();
+    std::shared_ptr<Track> previousTrack();
     
     //Virtual method. Subclasses define here how a track can be played and stopped
     virtual void playTrack(int trackIndex) = 0;

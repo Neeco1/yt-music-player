@@ -30,6 +30,8 @@ public:
     bool startPlayback();
     bool stopPlayback();
     bool pausePlayback();
+    bool nextTrack();
+    bool previousTrack();
     bool setVolume(unsigned int vol);
     
     PlaybackInfo getPlaybackInfo();

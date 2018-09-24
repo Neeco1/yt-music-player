@@ -6,8 +6,30 @@
 	objectVersion = 48;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		37732EC5215949CA00EBCB57 /* src in CopyFiles */ = {isa = PBXBuildFile; fileRef = 370D26C8212347BE0073C90F /* src */; };
+		37732EC6215949CF00EBCB57 /* include in CopyFiles */ = {isa = PBXBuildFile; fileRef = 37E1AE652120C11500704FA7 /* include */; };
+		37732EC7215949D200EBCB57 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 37E1AE632120C11500704FA7 /* lib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		37732EC4215949BA00EBCB57 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				37732EC7215949D200EBCB57 /* lib in CopyFiles */,
+				37732EC6215949CF00EBCB57 /* include in CopyFiles */,
+				37732EC5215949CA00EBCB57 /* src in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		370D26C8212347BE0073C90F /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
+		37D22C6C21594A7B006F0494 /* yt-music-player-doc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = "yt-music-player-doc"; path = "/Users/Nicolas/Repositories/yt-music-player/build/Debug/yt-music-player-doc"; sourceTree = "<absolute>"; };
 		37E1AE602120C11500704FA7 /* build */ = {isa = PBXFileReference; lastKnownFileType = folder; path = build; sourceTree = "<group>"; };
 		37E1AE622120C11500704FA7 /* doc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = doc; sourceTree = "<group>"; };
 		37E1AE632120C11500704FA7 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
@@ -16,6 +38,16 @@
 		37E1AE672120C28B00704FA7 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		37E1AE682120C5B400704FA7 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		37732EB92159487B00EBCB57 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		37E1AE4C2120C0E100704FA7 = {
@@ -37,12 +69,12 @@
 /* Begin PBXLegacyTarget section */
 		37E1AE512120C0E100704FA7 /* yt-music-player */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = ./;
+			buildArgumentsString = "";
 			buildConfigurationList = 37E1AE542120C0E100704FA7 /* Build configuration list for PBXLegacyTarget "yt-music-player" */;
 			buildPhases = (
 			);
-			buildToolPath = /opt/local/bin/cmake;
-			buildWorkingDirectory = "";
+			buildToolPath = make;
+			buildWorkingDirectory = "/Users/Nicolas/Repositories/yt-music-player/build";
 			dependencies = (
 			);
 			name = "yt-music-player";
@@ -51,6 +83,26 @@
 		};
 /* End PBXLegacyTarget section */
 
+/* Begin PBXNativeTarget section */
+		37732EBB2159487B00EBCB57 /* yt-music-player-doc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 37732EC12159487B00EBCB57 /* Build configuration list for PBXNativeTarget "yt-music-player-doc" */;
+			buildPhases = (
+				37732EB82159487B00EBCB57 /* Sources */,
+				37732EB92159487B00EBCB57 /* Frameworks */,
+				37732EC4215949BA00EBCB57 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "yt-music-player-doc";
+			productName = "yt-music-player-doc";
+			productReference = 37D22C6C21594A7B006F0494 /* yt-music-player-doc */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
 /* Begin PBXProject section */
 		37E1AE4D2120C0E100704FA7 /* Project object */ = {
 			isa = PBXProject;
@@ -58,6 +110,10 @@
 				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = neeco;
 				TargetAttributes = {
+					37732EBB2159487B00EBCB57 = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
 					37E1AE512120C0E100704FA7 = {
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Automatic;
@@ -72,15 +128,49 @@
 				en,
 			);
 			mainGroup = 37E1AE4C2120C0E100704FA7;
+			productRefGroup = 37E1AE4C2120C0E100704FA7;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				37E1AE512120C0E100704FA7 /* yt-music-player */,
+				37732EBB2159487B00EBCB57 /* yt-music-player-doc */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXSourcesBuildPhase section */
+		37732EB82159487B00EBCB57 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
 /* Begin XCBuildConfiguration section */
+		37732EC22159487B00EBCB57 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		37732EC32159487B00EBCB57 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		37E1AE522120C0E100704FA7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -206,6 +296,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		37732EC12159487B00EBCB57 /* Build configuration list for PBXNativeTarget "yt-music-player-doc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37732EC22159487B00EBCB57 /* Debug */,
+				37732EC32159487B00EBCB57 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		37E1AE502120C0E100704FA7 /* Build configuration list for PBXProject "yt-music-player" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

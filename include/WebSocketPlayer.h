@@ -39,6 +39,8 @@ public:
     Json::Value stop();
     Json::Value start();
     Json::Value pause();
+    Json::Value nextTrack();
+    Json::Value previousTrack();
     
     Json::Value setVolume(unsigned int percentage);
     Json::Value addPlaylist(const std::string & url, const std::string & name);

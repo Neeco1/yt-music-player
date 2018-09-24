@@ -130,22 +130,58 @@ function handleWsMessage(e) {
         if(info.state === "playing" || info.state === "paused")
         {
             showNowPlaying();
+            document.getElementById("btnStop").classList.remove("stateActive");
+            if(info.state === "paused")
+            {
+                document.getElementById("btnPlay").classList.remove("stateActive");
+                document.getElementById("btnPause").classList.add("stateActive");
+            }
+            else
+            {
+                document.getElementById("button_container").style.marginBottom = "60px";
+                document.getElementById("btnPlay").classList.add("stateActive");
+                document.getElementById("btnPause").classList.remove("stateActive");
+            }
         }
         else
         {
             hideNowPlaying();
+            document.getElementById("btnPause").classList.remove("stateActive");
+            document.getElementById("btnStop").classList.add("stateActive");
+            document.getElementById("btnPlay").classList.remove("stateActive");
+        }
+        if(info.playback_mode === "shuffle")
+        {
+            
         }
         return;
+    }
+    if(jsonMsg.data.status === "playback_started")
+    {
+        document.getElementById("button_container").style.marginBottom = "60px";
+        document.getElementById("btnPause").classList.remove("stateActive");
+        document.getElementById("btnStop").classList.remove("stateActive");
+        document.getElementById("btnPlay").classList.add("stateActive");
     }
     if(jsonMsg.data.status === "playback_stopped")
     {
         try
         {
+            document.getElementById("button_container").style.marginBottom = "0px";
+            document.getElementById("btnPause").classList.remove("stateActive");
+            document.getElementById("btnStop").classList.add("stateActive");
+            document.getElementById("btnPlay").classList.remove("stateActive");
             document.getElementById("playlist"+currentPlaylistId).classList.remove("now_playing");
             return
         }
         catch(e) {}
         return;
+    }
+    if(jsonMsg.data.status === "playback_paused")
+    {
+        document.getElementById("btnPause").classList.add("stateActive");
+        document.getElementById("btnStop").classList.remove("stateActive");
+        document.getElementById("btnPlay").classList.remove("stateActive");
     }
 }
 
@@ -213,10 +249,11 @@ function initGui() {
 }
 
 function showNowPlaying() {
-    document.getElementById("playback_info").style.display="table-cell";
+    document.getElementById("playback_info").style.marginBottom="0px";
 }
 function hideNowPlaying() {
-    document.getElementById("playback_info").style.display="none";
+    document.getElementById("button_container").style.marginBottom = "0px";
+    document.getElementById("playback_info").style.marginBottom="-60px";
 }
 
 window.onload = function() {
@@ -295,21 +332,36 @@ function pausePlaying() {
     wsConn.send('{ "cmd" : "pause", "data" : {}}');
 }
 
+function nextTrack() {
+    wsConn.send('{ "cmd" : "nextTrack", "data" : {}}');
+}
+
+function previousTrack() {
+    wsConn.send('{ "cmd" : "previousTrack", "data" : {}}');
+}
+
+function setPlaybackMode(mode) {
+    if(mode === "repeat") 
+    {
+        document.getElementById("btnRepeat").classList.remove("hidden");
+        document.getElementById("btnShuffle").classList.add("visible");
+    }
+    if(mode === "shuffle") 
+    {
+        document.getElementById("btnRepeat").classList.add("hidden");
+        document.getElementById("btnShuffle").classList.remove("visible");
+    }
+}
+
 </script>
 
 </head>
 <body>
 
-<h1>WGay Music Player</h1>
-<div id="button_container">
-    0% <input type="range" min="60" max="100" value="80" class="slider" id="volume_slider"> 100%
-    <br />
-    <br />
-    <a href="#" onclick="previousTrack()"><i class="material-icons">skip_previous</i></a>
-    <a href="#" onclick="startPlaying()"><i class="material-icons">play_circle_outline</i></a>&nbsp;
-    <a href="#" onclick="stopPlaying()"><i class="material-icons">stop</i></a>&nbsp;
-    <a href="#" onclick="pausePlaying()"><i class="material-icons">pause_circle_filled</i></a>
-    <a href="#" onclick="nextTrack()"><i class="material-icons">skip_next</i></a>
+<div id="topContent">
+    <h1>WGay Music Player</h1>
+
+    0% <input type="range" min="60" max="100" value="<?php echo read_volume(); ?>" class="slider" id="volume_slider"> 100%
 </div>
 
 <div id="block_container">
@@ -336,7 +388,19 @@ function pausePlaying() {
 
 </div>
 
-<div id="playback_info" style="display:none">
+<div id="button_container">
+    <i id="btnPrevious" onclick="previousTrack()" class="material-icons">skip_previous</i>
+    <i id="btnPlay" onclick="startPlaying()" class="material-icons">play_circle_outline</i></a>&nbsp;
+    <i id="btnStop" onclick="stopPlaying()" class="material-icons">stop</i></a>&nbsp;
+    <i id="btnPause" onclick="pausePlaying()" class="material-icons">pause_circle_outline</i></a>
+    <i id="btnNext" onclick="nextTrack()" class="material-icons">skip_next</i></a>
+    <div id="playback_mode_area">
+        <i id="btnRepeat" onclick="setPlaybackMode('repeat')" class="material-icons hidden">repeat</i>
+        <i id="btnShuffle" onclick="setPlaybackMode('shuffle')"class="material-icons">shuffle</i>
+    </div>
+</div>
+
+<div id="playback_info" style="margin-bottom: -60px;">
     <img id="now_playing_thumb" />
     <div id="now_playing_title"></div>
 </div>

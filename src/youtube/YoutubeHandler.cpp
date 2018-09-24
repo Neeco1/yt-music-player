@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <atomic>
 #include "Utils.h"
 #include "jsoncpp/json/json.h"
 #include "EventBus/EventBus.hpp"
@@ -48,11 +49,15 @@ void YoutubeHandler::fetchPlaylistInfo(std::string playlistId, std::string name)
         for(auto track : trackEntries)
         {
             auto curTrack = std::make_shared<Track>(track["id"].asString());
+            std::string webpageUrl = track["webpage_url"].asString();
+            if(webpageUrl.compare("") == 0)
+            {
+                continue;
+            }
+            curTrack->setUrl(webpageUrl);
             curTrack->setName(track["title"].asString());
             curTrack->setDuration(Utils::secondsToTrackDuration(track["duration"].asUInt()));
-            curTrack->setUrl(track["webpage_url"].asString());
             curTrack->setThumbUrl(track["thumbnail"].asString());
-            
             ytpl->addTrack(curTrack);
         }
         

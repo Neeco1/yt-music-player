@@ -12,12 +12,15 @@
 #include "youtube/YoutubePlaylist.h"
 #include "EventBus/HandlerRegistration.hpp"
 #include "EventBus/EventBus.hpp"
+#include "MPV_Controller.h"
 
 MusicPlayer::MusicPlayer()
 : currentPlaylist(nullptr) {
     regNewPlaylistReady = EventBus::AddHandler<NewPlaylistReadyEvent>(*this);
     Utils::checkDirectory();
     readDataFromJsonFile();
+    
+    MPV_Controller::startMPVIdle();
 }
 
 MusicPlayer::~MusicPlayer() {
@@ -55,6 +58,24 @@ bool MusicPlayer::pausePlayback() {
     }
     return false;
 }
+bool MusicPlayer::nextTrack() {
+    if(!currentPlaylist) { return false; }
+    if(currentPlaylist->isPlaying())
+    {
+        currentPlaylist->nextTrack();
+        return true;
+    }
+    return false;
+}
+bool MusicPlayer::previousTrack() {
+    if(!currentPlaylist) { return false; }
+    if(currentPlaylist->isPlaying())
+    {
+        currentPlaylist->previousTrack();
+        return true;
+    }
+    return false;
+}
 
 bool MusicPlayer::setVolume(unsigned int volume) {
     if(volume > 100) { volume = 100; }
@@ -71,8 +92,8 @@ PlaybackInfo MusicPlayer::getPlaybackInfo() {
     if(!currentPlaylist) { return info; }
     //Build playback info object
     auto track = currentPlaylist->getCurrentTrack();
-    if(currentPlaylist->isPlaying()) { info.state = "playing"; }
-    else if(currentPlaylist->isPaused()) { info.state = "paused"; }
+    if(currentPlaylist->isPaused()) { info.state = "paused"; }
+    else if(currentPlaylist->isPlaying()) { info.state = "playing"; }
     info.title = track->getName();
     info.trackId = track->getTrackId();
     info.playbackTime = 0;
@@ -109,7 +130,6 @@ std::string MusicPlayer::addPlaylistFromUrl(std::string url, std::string name) {
         ytHandler.newPlaylist(listId, name);
         return listId;
     }
-    std::cout << "No valid url!" << std::endl;
     return "";
     //else if(spotify)
         //...
@@ -165,7 +185,6 @@ void MusicPlayer::writeDataToJsonFile() {
 
 void MusicPlayer::onEvent(NewPlaylistReadyEvent & e) {
     auto playlist = e.getPlaylist();
-    std::cout << "Playlist '" << playlist->getName() << "' ready!" << std::endl;
     addPlaylist(playlist);
     writeDataToJsonFile();
 }

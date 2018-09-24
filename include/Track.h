@@ -6,17 +6,15 @@
 #include "jsoncpp/json/json.h"
 
 class Track {
-using string = std::string;
-
 private:
-    string name;
-    string url;
-    string trackId;
+    std::string name;
+    std::string url;
+    std::string trackId;
     TrackDuration duration;
-    string thumbUrl;
+    std::string thumbUrl;
     
 public:
-    Track(const string & trackId)
+    Track(const std::string & trackId)
         : trackId(trackId) {}
     
     Track(Json::Value & track) {
@@ -32,24 +30,24 @@ public:
     }
 
     /** Getters and Setters **/
-    string getName() const {
+    std::string getName() const {
         return name;
     }
-    void setName(const string & name) {
+    void setName(const std::string & name) {
         this->name = name;
     }
     
-    string getUrl() const {
+    std::string getUrl() const {
         return url;
     }
-    void setUrl(const string & url) {
+    void setUrl(const std::string & url) {
         this->url = url;
     }
     
-    string getTrackId() const {
+    std::string getTrackId() const {
         return trackId;
     }
-    void setTrackId(const string & trackId) {
+    void setTrackId(const std::string & trackId) {
         this->trackId = trackId;
     }
     
@@ -60,10 +58,10 @@ public:
         this->duration = duration;
     }
     
-    void setThumbUrl(const string & thumbUrl) {
+    void setThumbUrl(const std::string & thumbUrl) {
         this->thumbUrl = thumbUrl;
     }
-    string getThumbUrl() {
+    std::string getThumbUrl() {
         return thumbUrl;
     }
     

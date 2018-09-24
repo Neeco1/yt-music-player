@@ -5,6 +5,7 @@ include_directories (/usr/local/include/)
 add_library(WebSocketPlayer WebSocketPlayer.cpp)
 add_library(MusicPlayer MusicPlayer.cpp Playlist.cpp)
 add_library(Utils Utils.cpp)
+add_library(MPV_Controller MPV_Controller.cpp)
 
 add_subdirectory(youtube/)
 
