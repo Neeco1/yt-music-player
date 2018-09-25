@@ -4,8 +4,6 @@
 #include "Utils.h"
 #include <iostream>
 
-std::string mpvSocketUrl = "/tmp/mpvsocket";
-
 MPV_Controller::CommandMap MPV_Controller::commands  = {
     { "mpvSocketUrl", mpvSocketUrl },
     { "cmdGetMediaTitle", "echo '{ \"command\": "

@@ -352,6 +352,8 @@ Json::Value WebSocketPlayer::getPlaybackInfo() {
     pbInfo["title"] = info.title;
     pbInfo["track_id"] = info.trackId;
     pbInfo["thumb_url"] = info.thumbUrl;
+    pbInfo["track_duration"] = info.duration;
+    pbInfo["track_playback_time"] = info.playbackTime;
     
     switch(info.playbackMode)
     {

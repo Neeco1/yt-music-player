@@ -13,21 +13,31 @@
 #include "EventBus/HandlerRegistration.hpp"
 #include "EventBus/EventBus.hpp"
 #include "MPV_Controller.h"
+#include "MPV_Listener.h"
+#include <chrono>
 
 MusicPlayer::MusicPlayer()
 : currentPlaylist(nullptr) {
-    regNewPlaylistReady = EventBus::AddHandler<NewPlaylistReadyEvent>(*this);
+    
     Utils::checkDirectory();
     readDataFromJsonFile();
     
+    handlerRegs.push_back(EventBus::AddHandler<NewPlaylistReadyEvent>(*this));
+    handlerRegs.push_back(EventBus::AddHandler<FileEndPlayingEvent>(*this));
+    
     MPV_Controller::startMPVIdle();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    MPV_Listener::startMPVListener();
 }
 
 MusicPlayer::~MusicPlayer() {
-    if(regNewPlaylistReady != nullptr)
+    for(auto handlerReg : handlerRegs)
     {
-        regNewPlaylistReady->removeHandler();
-        delete regNewPlaylistReady;
+        if(handlerReg != nullptr)
+        {
+            handlerReg->removeHandler();
+            delete handlerReg;
+        }
     }
 }
 
@@ -97,7 +107,7 @@ PlaybackInfo MusicPlayer::getPlaybackInfo() {
     info.title = track->getName();
     info.trackId = track->getTrackId();
     info.playbackTime = 0;
-    info.duration = 0;
+    info.duration = track->getDurationSeconds();
     info.playbackMode = Normal;
     info.thumbUrl = track->getThumbUrl();
     return info;
@@ -187,4 +197,9 @@ void MusicPlayer::onEvent(NewPlaylistReadyEvent & e) {
     auto playlist = e.getPlaylist();
     addPlaylist(playlist);
     writeDataToJsonFile();
+}
+
+void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
+    if(!currentPlaylist) { return; }
+    currentPlaylist->nextTrack();
 }

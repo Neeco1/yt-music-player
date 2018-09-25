@@ -57,36 +57,13 @@ void YoutubePlaylist::playList() {
     }
     
     //If not paused, start playing
-    startPlaying();
+    playTrack(currentTrack);
     stopPlaybackFlag = false;
     nowPlaying = true;
 }
 void YoutubePlaylist::pausePlayback() {
     MPV_Controller::setProperty("cmdPausePlayback");
     nowPaused = true;
-}
-
-void YoutubePlaylist::startPlaying() {
-    playTrack(currentTrack);
-    std::thread playbackThread([this] {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-        while(!stopPlaybackFlag)
-        {
-            int remainingTime = MPV_Controller::getPropertyAsInt("cmdGetRemainingTime");
-            std::cout << "Remaining time: " << remainingTime << std::endl;
-            if(remainingTime == 0)
-            {
-                nextTrack();
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-        }
-        MPV_Controller::setProperty("cmdStopPlayback");
-        
-        //Publish new event that playback stopped
-        PlaybackStoppedEvent e(*this, "stopped");
-        EventBus::FireEvent(e);
-    });
-    playbackThread.detach();
 }
 
 Json::Value YoutubePlaylist::getJson() {

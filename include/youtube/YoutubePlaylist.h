@@ -13,8 +13,6 @@ private:
     std::string playlistUrl;
     std::atomic<bool> stopPlaybackFlag;
     
-    void startPlaying();
-    
 public:
     YoutubePlaylist(std::string playlistUrl);
     YoutubePlaylist(Json::Value json);

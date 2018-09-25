@@ -5,6 +5,8 @@
 #include <map>
 #include "Types.h"
 
+static std::string mpvSocketUrl = "/tmp/mpvsocket";
+
 class MPV_Controller {
 public:
     typedef std::map<std::string, std::string> CommandMap;

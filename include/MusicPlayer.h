@@ -5,11 +5,15 @@
 #include "Track.h"
 #include "Types.h"
 #include <memory>
+#include <vector>
 #include "EventBus/EventHandler.hpp"
-#include "events/NewPlaylistReadyEvent.h"
 #include "EventBus/HandlerRegistration.hpp"
+#include "events/NewPlaylistReadyEvent.h"
+#include "events/FileEndPlayingEvent.h"
 
-class MusicPlayer : public EventHandler<NewPlaylistReadyEvent> {
+class MusicPlayer : public EventHandler<NewPlaylistReadyEvent>,
+                    public EventHandler<FileEndPlayingEvent>
+{
 
 typedef std::map<std::string, std::shared_ptr<Playlist>> PlaylistMap;
 
@@ -18,7 +22,7 @@ private:
     std::shared_ptr<Playlist> currentPlaylist;
     
     //Handler pointer for NewPlaylistReadyEvent
-    HandlerRegistration* regNewPlaylistReady;
+    std::vector<HandlerRegistration*> handlerRegs;
 
 public:
     MusicPlayer();
@@ -45,6 +49,7 @@ public:
     
     
     virtual void onEvent(NewPlaylistReadyEvent & e) override;
+    virtual void onEvent(FileEndPlayingEvent & e) override;
     
 };
 

@@ -54,6 +54,9 @@ public:
     TrackDuration getDuration() const {
         return duration;
     }
+    int getDurationSeconds() const {
+        return duration.hours*3600 + duration.minutes*60 + duration.seconds;
+    }
     void setDuration(const TrackDuration & duration) {
         this->duration = duration;
     }
