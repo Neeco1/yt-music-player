@@ -3,6 +3,8 @@
 A music player which can be controlled using a web interface based on websockets. This is still a work in progress!
 I started developing this project because I needed a simple and easy-to-use music player for my Raspberry Pi.
 
+It works, but might still have a lot of bugs and the webclient is a quick-and-dirty one.
+
 Currently the player supports only youtube tracks and playlists. Feel free to add support for more services!
 
 ### Youtube Plugin:
