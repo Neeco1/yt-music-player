@@ -1,0 +1,13 @@
+{
+    "short_name": "WGay Music Player",
+    "name" : "WGay Music Player",
+    "icons" : [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }],
+    "start_url": "/",
+    "background_color": "#3367D6",
+    "display": "standalone"
+  }
