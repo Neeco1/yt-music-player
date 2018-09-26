@@ -8,16 +8,16 @@
 #include "jsoncpp/json/json.h"
 #include "EventBus/EventBus.hpp"
 #include "events/FileEndPlayingEvent.h"
+#include "events/PlaybackTimeUpdatedEvent.h"
 
 //public and static
 void MPV_Listener::startMPVListener() {
-    static MPV_Listener instance;
     //Check if we need to restart the thread
-    auto status = instance.listenerFuture.wait_for(std::chrono::milliseconds(0));
+    auto status = getInstance().listenerFuture.wait_for(std::chrono::milliseconds(0));
     if(status == std::future_status::ready)
     {
-        instance.stopListener = false;
-        instance.startListenerThread();
+        getInstance().stopListener = false;
+        getInstance().startListenerThread();
     }
 }
 
@@ -33,10 +33,11 @@ void MPV_Listener::startListenerThread() {
         while(!connectSocket())
         {
             if(stopListener) { return; }
-            std::cout << "Socket Connection failed!" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            std::cerr << "Socket connection to mpv failed!" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
-        std::cout << "MPV Listener connected." << std::endl;
+        //Send command to listen to playback time
+        MPV_Listener::observeProperty("playback-time");
         while(!stopListener)
         {
             handleData();
@@ -66,32 +67,64 @@ bool MPV_Listener::handleData() {
     char buf[100];
     int rxByteCount;
     
+    //Read at max 1024 bytes from socket
     while( (rxByteCount = read(sockDescriptor, buf, sizeof(buf))) > 0 )
     {
-        std::string mpvEvt = parseEventString(std::string(buf));
-        handleEvent(mpvEvt);
+        std::string nextMsg;
+        //Parse the data (read until "new line" character)
+        for (int i=0; i<rxByteCount; ++i)
+        {
+            char c = buf[i];
+            if (c == '\n')
+            {
+                if (nextMsg.length() > 0)
+                {
+                    Json::Value fullJson;
+                    std::string evt = parseEventString(nextMsg, fullJson);
+                    handleEvent(evt, fullJson);
+                    
+                    //Empty "nextMsg" again and start over
+                    nextMsg = "";
+                }
+            }
+            else nextMsg += c;
+        }
         return true;
     }
     
     return false;
 }
 
-std::string MPV_Listener::parseEventString(std::string data) {
-    Json::Value jsonData;
+std::string MPV_Listener::parseEventString(std::string evtStr, Json::Value & fullJson) {
     Json::Reader reader;
-    bool success = reader.parse(data.c_str(), jsonData);
+    bool success = reader.parse(evtStr.c_str(), fullJson);
 
-    if (!success || !jsonData.isMember("event")) { return ""; }
-    return jsonData["event"].asString();
+    if (!success || !fullJson.isMember("event")) { return ""; }
+    return fullJson["event"].asString();
 }
 
-void MPV_Listener::handleEvent(std::string mpvEvt) {
+void MPV_Listener::handleEvent(std::string mpvEvt, Json::Value & fullJson) {
     //std::cout << "MPV event: " << mpvEvt << std::endl;
     if(mpvEvt.compare("") == 0) { return; }
+    
+    //Observe changed properties
+    if(mpvEvt.compare("property-change") == 0)
+    {
+        //Playback time updated
+        if(fullJson["name"].asString().compare("playback-time") == 0)
+        {
+            unsigned int newTime = fullJson["data"].asUInt();
+            //Publish new event that playback time was updated
+            PlaybackTimeUpdatedEvent e(*this, newTime);
+            EventBus::FireEvent(e);
+        }
+        return;
+    }
+    
     //File ended playing
     if(mpvEvt.compare("end-file") == 0 || mpvEvt.compare("idle") == 0)
     {
-        //Publish new event that playback stopped
+        //Publish new event that playback ended
         FileEndPlayingEvent e(*this);
         EventBus::FireEvent(e);
         return;
@@ -102,5 +135,22 @@ void MPV_Listener::handleEvent(std::string mpvEvt) {
 
 void MPV_Listener::stop() {
     stopListener = true;
+}
+
+void MPV_Listener::observeProperty(std::string property) {
+    //Check if listener thread is active
+    auto status = getInstance().listenerFuture.wait_for(std::chrono::milliseconds(0));
+    if(status != std::future_status::ready)
+    {
+        getInstance().sendCommand("{ \"command\": [\"observe_property\", 1, \""+property+"\"] }");
+    }
+}
+
+void MPV_Listener::sendCommand(std::string cmd) {
+    int result = write(sockDescriptor, cmd.c_str(), cmd.length());
+    if(result < 0)
+    {
+        std::cerr << "Error sending command to mpv via socket." << std::endl;
+    }
 }
 

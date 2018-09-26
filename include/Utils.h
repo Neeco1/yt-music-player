@@ -19,6 +19,8 @@ public:
     static bool writeJsonToFile(Json::Value json, std::string pathname);
     static Json::Value readJsonFromFile(std::string pathname);
     static Json::Value playlistsToJson(std::vector<std::shared_ptr<Playlist>> lists);
+    
+    static void updateYoutubeDl();
 };
 
 #endif

@@ -174,6 +174,12 @@ void WebSocketPlayer::initCommandEndpoint() {
         {
             responseJson = previousTrack();
         }
+        else if(command.compare("update_yt_dl"))
+        {
+            Utils::updateYoutubeDl();
+            responseJson["error"] = 0;
+            responseJson["data"]["status"] = "null";
+        }
         else
         {
             responseJson["error"] = 1;

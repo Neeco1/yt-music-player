@@ -5,10 +5,17 @@
 #include <atomic>
 #include <EventBus/Object.hpp>
 #include "MPV_Controller.h"
+#include "jsoncpp/json/json.h"
 
 class MPV_Listener : public Object {
 private:
-    MPV_Listener();
+    //Singleton
+    static MPV_Listener & getInstance() {
+        static MPV_Listener instance;
+        return instance;
+    }
+    
+    MPV_Listener(); //Private constructor
     MPV_Listener(MPV_Listener const&)= delete;
     void operator=(MPV_Listener const&) = delete;
     
@@ -19,15 +26,18 @@ private:
     int sockDescriptor;
     bool socketConnected;
     
-    std::string parseEventString(std::string data);
-    void handleEvent(std::string event);
+    std::string parseEventString(std::string evtStr, Json::Value & fullJson);
+    void handleEvent(std::string event, Json::Value & fullJson);
 
 public:
     static void startMPVListener();
+    static void observeProperty(std::string property);
     
     bool connectSocket();
     bool handleData();
     void stop();
+    
+    void sendCommand(std::string cmd);
 };
 
 #endif

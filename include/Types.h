@@ -25,6 +25,10 @@ struct PlaybackInfo {
     unsigned int duration;
     PlaybackMode playbackMode;
     std::string thumbUrl;
+    
+    PlaybackInfo()
+    : state(""), title(""), trackId(""), playbackTime(0), duration(0),
+      playbackMode(Normal), thumbUrl("") {}
 };
 
 

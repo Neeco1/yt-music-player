@@ -28,7 +28,7 @@ MPV_Controller::CommandMap MPV_Controller::commands  = {
 
 void MPV_Controller::startMPVIdle() {
     std::stringstream ssCmd;
-    ssCmd << "mpv --no-video --idle --input-ipc-server=" << mpvSocketUrl << " &";
+    ssCmd << "mpv --no-video --idle --input-ipc-server=" << mpvSocketUrl << " > /dev/null 2>&1 &";
     std::string cmd = ssCmd.str();
     system(cmd.c_str());
 }

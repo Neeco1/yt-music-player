@@ -10,9 +10,13 @@
 #include "EventBus/HandlerRegistration.hpp"
 #include "events/NewPlaylistReadyEvent.h"
 #include "events/FileEndPlayingEvent.h"
+#include "events/FileStartPlayingEvent.h"
+#include "events/PlaybackTimeUpdatedEvent.h"
 
 class MusicPlayer : public EventHandler<NewPlaylistReadyEvent>,
-                    public EventHandler<FileEndPlayingEvent>
+                    public EventHandler<FileEndPlayingEvent>,
+                    public EventHandler<FileStartPlayingEvent>,
+                    public EventHandler<PlaybackTimeUpdatedEvent>
 {
 
 typedef std::map<std::string, std::shared_ptr<Playlist>> PlaylistMap;
@@ -23,6 +27,12 @@ private:
     
     //Handler pointer for NewPlaylistReadyEvent
     std::vector<HandlerRegistration*> handlerRegs;
+    
+    bool stopPressed;
+    bool prevPressed;
+    bool nextPressed;
+    
+    unsigned int currentPlaybackTime;
 
 public:
     MusicPlayer();
@@ -49,7 +59,9 @@ public:
     
     
     virtual void onEvent(NewPlaylistReadyEvent & e) override;
+    virtual void onEvent(FileStartPlayingEvent & e) override;
     virtual void onEvent(FileEndPlayingEvent & e) override;
+    virtual void onEvent(PlaybackTimeUpdatedEvent & e) override;
     
 };
 

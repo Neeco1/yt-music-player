@@ -222,6 +222,15 @@ input[name=playlist_name] {
     /*text-overflow: ellipsis;*/
 }
 
+#progress_bar {
+    background: rgb(0, 162, 255);
+    width:100%;
+    height:3px;
+    position:absolute;
+    z-index:40;
+    top:0;
+}
+
 #connection_lost {
     font-family:sans-serif;
     position: fixed;

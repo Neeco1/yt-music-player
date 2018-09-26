@@ -124,3 +124,8 @@ Json::Value Utils::playlistsToJson(std::vector<std::shared_ptr<Playlist>> lists)
     }
     return listsJson;
 }
+
+void Utils::updateYoutubeDl() {
+    std::string command = "pip install --upgrade youtube-dl";
+    Utils::execCommand(command);
+}

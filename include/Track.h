@@ -22,9 +22,9 @@ public:
         setName(track["name"].asString());
         setUrl(track["url"].asString());
         TrackDuration dur;
-        dur.hours = track["duration"]["hours"].asUInt();
-        dur.minutes = track["duration"]["minutes"].asUInt();
-        dur.seconds = track["duration"]["seconds"].asUInt();
+        dur.hours = track["duration"]["h"].asUInt();
+        dur.minutes = track["duration"]["m"].asUInt();
+        dur.seconds = track["duration"]["s"].asUInt();
         setDuration(dur);
         setThumbUrl(track["thumbUrl"].asString());
     }

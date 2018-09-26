@@ -11,6 +11,8 @@
   integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
   crossorigin="anonymous"></script>
 
+<script src="./reconnecting-websocket.min.js"></script>
+
 <script type="text/javascript">
 function getRandomColor() {
     var letters = '0123456789ABCDEF';
@@ -30,7 +32,7 @@ var playlists;
 var currentPlaylistId;
 
 function setupWebsocketConnection() {
-    wsConn = new WebSocket('ws://'+window.location.hostname+':8080/action');
+    wsConn = new ReconnectingWebSocket('ws://'+window.location.hostname+':8080/action');
     wsConn.onopen = handleWsOpen;
     wsConn.onerror = handleWsError;
     wsConn.onclose = handleWsClose;
@@ -57,10 +59,42 @@ function handleWsError(error) {
 
 function handleWsClose(e) {
     window.clearInterval(playbackStateInterval);
-    wsConn = null;
-    reconnectInterval = setInterval(setupWebsocketConnection, 5000);
     hideNowPlaying();
     document.getElementById("connection_lost").style.display="block";
+}
+
+function handlePlaybackInfo(jsonMsg) {
+    var info = jsonMsg.data.playback_info;
+    document.getElementById("now_playing_title").innerHTML = info.title;
+    document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
+    console.log("Duration: " + info.track_duration + ", played: " + info.track_playback_time);
+    if(info.state === "playing" || info.state === "paused")
+    {
+        showNowPlaying();
+        document.getElementById("btnStop").classList.remove("stateActive");
+        if(info.state === "paused")
+        {
+            document.getElementById("btnPlay").classList.remove("stateActive");
+            document.getElementById("btnPause").classList.add("stateActive");
+        }
+        else
+        {
+            document.getElementById("button_container").style.marginBottom = "60px";
+            document.getElementById("btnPlay").classList.add("stateActive");
+            document.getElementById("btnPause").classList.remove("stateActive");
+        }
+    }
+    else
+    {
+        hideNowPlaying();
+        document.getElementById("btnPause").classList.remove("stateActive");
+        document.getElementById("btnStop").classList.add("stateActive");
+        document.getElementById("btnPlay").classList.remove("stateActive");
+    }
+    if(info.playback_mode === "shuffle")
+    {
+        
+    }
 }
 
 function handleWsMessage(e) {
@@ -124,36 +158,7 @@ function handleWsMessage(e) {
     }
     if(jsonMsg.data.status === "playback_info")
     {
-        var info = jsonMsg.data.playback_info;
-        document.getElementById("now_playing_title").innerHTML = info.title;
-        document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
-        if(info.state === "playing" || info.state === "paused")
-        {
-            showNowPlaying();
-            document.getElementById("btnStop").classList.remove("stateActive");
-            if(info.state === "paused")
-            {
-                document.getElementById("btnPlay").classList.remove("stateActive");
-                document.getElementById("btnPause").classList.add("stateActive");
-            }
-            else
-            {
-                document.getElementById("button_container").style.marginBottom = "60px";
-                document.getElementById("btnPlay").classList.add("stateActive");
-                document.getElementById("btnPause").classList.remove("stateActive");
-            }
-        }
-        else
-        {
-            hideNowPlaying();
-            document.getElementById("btnPause").classList.remove("stateActive");
-            document.getElementById("btnStop").classList.add("stateActive");
-            document.getElementById("btnPlay").classList.remove("stateActive");
-        }
-        if(info.playback_mode === "shuffle")
-        {
-            
-        }
+        handlePlaybackInfo(jsonMsg);
         return;
     }
     if(jsonMsg.data.status === "playback_started")
@@ -401,6 +406,7 @@ function setPlaybackMode(mode) {
 </div>
 
 <div id="playback_info" style="margin-bottom: -60px;">
+    <div id="progress_bar"></div>
     <img id="now_playing_thumb" />
     <div id="now_playing_title"></div>
 </div>

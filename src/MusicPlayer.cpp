@@ -17,13 +17,18 @@
 #include <chrono>
 
 MusicPlayer::MusicPlayer()
-: currentPlaylist(nullptr) {
+: currentPlaylist(nullptr),
+  stopPressed(false), prevPressed(false), nextPressed(false),
+  currentPlaybackTime(0)
+{
     
     Utils::checkDirectory();
     readDataFromJsonFile();
     
     handlerRegs.push_back(EventBus::AddHandler<NewPlaylistReadyEvent>(*this));
     handlerRegs.push_back(EventBus::AddHandler<FileEndPlayingEvent>(*this));
+    handlerRegs.push_back(EventBus::AddHandler<FileStartPlayingEvent>(*this));
+    handlerRegs.push_back(EventBus::AddHandler<PlaybackTimeUpdatedEvent>(*this));
     
     MPV_Controller::startMPVIdle();
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -46,6 +51,7 @@ bool MusicPlayer::startPlayback() {
     {
         return false;
     }
+    stopPressed = false;
     currentPlaylist->playList();
     return true;
 }
@@ -55,6 +61,7 @@ bool MusicPlayer::stopPlayback() {
     if(currentPlaylist->isPlaying())
     {
         currentPlaylist->stopPlayback();
+        stopPressed = true;
         return true;
     }
 }
@@ -73,6 +80,7 @@ bool MusicPlayer::nextTrack() {
     if(currentPlaylist->isPlaying())
     {
         currentPlaylist->nextTrack();
+        nextPressed = true;
         return true;
     }
     return false;
@@ -82,6 +90,7 @@ bool MusicPlayer::previousTrack() {
     if(currentPlaylist->isPlaying())
     {
         currentPlaylist->previousTrack();
+        prevPressed = true;
         return true;
     }
     return false;
@@ -106,7 +115,7 @@ PlaybackInfo MusicPlayer::getPlaybackInfo() {
     else if(currentPlaylist->isPlaying()) { info.state = "playing"; }
     info.title = track->getName();
     info.trackId = track->getTrackId();
-    info.playbackTime = 0;
+    info.playbackTime = currentPlaybackTime;
     info.duration = track->getDurationSeconds();
     info.playbackMode = Normal;
     info.thumbUrl = track->getThumbUrl();
@@ -199,7 +208,23 @@ void MusicPlayer::onEvent(NewPlaylistReadyEvent & e) {
     writeDataToJsonFile();
 }
 
+void MusicPlayer::onEvent(FileStartPlayingEvent & e) {
+    currentPlaybackTime = 0;
+    if(stopPressed) { stopPressed = false; }
+    if(prevPressed) { prevPressed = false; }
+    if(nextPressed) { nextPressed = false; }
+}
+
 void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
+    currentPlaybackTime = 0;
     if(!currentPlaylist) { return; }
+    //Prevent playback of next track from this event after user pressed
+    //stop, previous or next
+    if(stopPressed || prevPressed || nextPressed) { return; }
+    
     currentPlaylist->nextTrack();
+}
+
+void MusicPlayer::onEvent(PlaybackTimeUpdatedEvent & e) {
+    currentPlaybackTime = e.getPlaybackTime();
 }
