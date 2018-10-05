@@ -32,6 +32,7 @@ var reconnectInterval;
 var playbackStateInterval;
 var playlists;
 var currentPlaylistId;
+var playbackInfo;
 
 function setupWebsocketConnection() {
     wsConn = new ReconnectingWebSocket('ws://'+window.location.hostname+':8080/action');
@@ -67,9 +68,13 @@ function handleWsClose(e) {
 
 function handlePlaybackInfo(jsonMsg) {
     var info = jsonMsg.data.playback_info;
+    playbackInfo = info; //Update global playback info
+
     document.getElementById("now_playing_title").innerHTML = info.title;
     document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
     console.log("Duration: " + info.track_duration + ", played: " + info.track_playback_time);
+
+    console.log(info.state);
     if(info.state === "playing" || info.state === "paused")
     {
         showNowPlaying();
@@ -85,6 +90,9 @@ function handlePlaybackInfo(jsonMsg) {
             document.getElementById("btnPlay").classList.add("stateActive");
             document.getElementById("btnPause").classList.remove("stateActive");
         }
+        
+        var progressWidthPercent = (info.track_playback_time / info.track_duration) * 100;
+        document.getElementById("progress_bar").style.width = progressWidthPercent+"%";
     }
     else
     {
@@ -92,6 +100,7 @@ function handlePlaybackInfo(jsonMsg) {
         document.getElementById("btnPause").classList.remove("stateActive");
         document.getElementById("btnStop").classList.add("stateActive");
         document.getElementById("btnPlay").classList.remove("stateActive");
+        document.getElementById("progress_bar").style.width = "0";
     }
     if(info.playback_mode === "shuffle")
     {
@@ -253,6 +262,10 @@ function initGui() {
         return false;
     });
     newPlaySendBtn.removeAttribute("disabled");
+
+    //Progress bar event handlers
+    var progressContainer = document.getElementById("progress_container");
+    progressContainer.addEventListener("click", handleProgressClick, true);
 }
 
 function showNowPlaying() {
@@ -360,13 +373,23 @@ function setPlaybackMode(mode) {
     }
 }
 
+function handleProgressClick(e) {
+    if(playbackInfo.track_duration == undefined || playbackInfo.track_duration == 0) { return; }
+
+    var clickedElm = e.target || e.srcElement;
+    var x_clicked = e.pageX - this.offsetLeft;
+    var totalWidth = this.offsetWidth;
+    var newTime = (playbackInfo.track_duration * (x_clicked / totalWidth)).toFixed(2);
+    wsConn.send('{ "cmd" : "setPlaybackTime", "data" : {"time" : "' + newTime + '"} }');
+}
+
 </script>
 
 </head>
 <body>
 
 <div id="topContent">
-    <h1>Music Player</h1>
+    <h1>WGay Music Player</h1>
 
     0% <input type="range" min="60" max="100" value="<?php echo read_volume(); ?>" class="slider" id="volume_slider"> 100%
 </div>
@@ -408,7 +431,9 @@ function setPlaybackMode(mode) {
 </div>
 
 <div id="playback_info" style="margin-bottom: -60px;">
-    <div id="progress_bar"></div>
+    <div id="progress_container">
+        <div id="progress_bar"></div>
+    </div>
     <img id="now_playing_thumb" />
     <div id="now_playing_title"></div>
 </div>
