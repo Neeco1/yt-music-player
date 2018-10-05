@@ -1,7 +1,11 @@
 # yt-music-player
 
-A music player using websockets. Currently supports youtube tracks and playlists. Feel free
-to add support for more services.
+A music player which can be controlled using a web interface based on websockets. This is still a work in progress!
+I started developing this project because I needed a simple and easy-to-use music player for my Raspberry Pi.
+
+It works, but might still have a lot of bugs and the webclient is a quick-and-dirty one.
+
+Currently the player supports only youtube tracks and playlists. Feel free to add support for more services!
 
 ### Youtube Plugin:
 - Uses [`mpv` player](https://mpv.io) in socket mode (using `--input-ipc-server=/tmp/mpvsocket`)
@@ -15,9 +19,11 @@ to add support for more services.
 - ``mkdir build && cd build``
 - ``cmake ..``
 - ``make``
-- ``./MusicPlayerService``
+- ``./MusicPlayerService`` (or run it in a [`screen`](https://wiki.ubuntuusers.de/Screen/) to put it in background)
 
-## Websocket API for Communication
+## Developers
+
+### Websocket API for Communication
 
 ```
 {
@@ -32,3 +38,5 @@ Possible commands:
 * set_volume
 * get_playlists
 * add_playlist
+
+For details, see the file [WebSocketPlayer.cpp](https://github.com/Neeco1/yt-music-player/blob/master/src/WebSocketPlayer.cpp)
