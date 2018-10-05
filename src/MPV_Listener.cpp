@@ -149,7 +149,7 @@ void MPV_Listener::sendCommand(std::string cmd) {
     int result = write(sockDescriptor, cmd.c_str(), cmd.length());
     if(result < 0)
     {
-        std::cerr << "Error sending command to mpv via socket." << std::endl;
+        std::cerr << "Error sending command '" << cmd << "' to mpv via socket." << std::endl;
     }
 }
 
