@@ -86,7 +86,8 @@ bool MPV_Controller::setProperty(std::string property, std::string data) {
           << property
           << "\", \""
           << data
-          << "\"] }' | socat - /tmp/mpvsocket";
+          << "\"] }' | socat - "
+          << mpvSocketUrl;
     std::string cmd = ssCmd.str();
     return sendStringCommand(cmd);
 }
@@ -95,7 +96,8 @@ void MPV_Controller::playMedia(std::string mediaUrl) {
     std::stringstream ssCmd;
     ssCmd << "echo '{ \"command\": [\"loadfile\", \""
           << mediaUrl
-          << "\"] }' | socat - /tmp/mpvsocket";
+          << "\"] }' | socat - "
+          << mpvSocketUrl;
     std::string cmd = ssCmd.str();
     system(cmd.c_str());
 }
