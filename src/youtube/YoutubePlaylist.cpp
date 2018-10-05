@@ -37,7 +37,7 @@ void YoutubePlaylist::playTrack(int trackIndex) {
 
 void YoutubePlaylist::stopPlayback() {
     //stopPlaybackFlag = true;
-    MPV_Controller::setProperty("cmdStopPlayback");
+    MPV_Controller::sendCommandFromMap("cmdStopPlayback");
     if(!isPlaying())
     {
         currentTrack = 0;
@@ -50,7 +50,7 @@ void YoutubePlaylist::playList() {
     //Resume if paused
     if(isPaused())
     {
-        MPV_Controller::setProperty("cmdUnpausePlayback");
+        MPV_Controller::sendCommandFromMap("cmdUnpausePlayback");
         nowPaused = false;
         nowPlaying = true;
         return;
@@ -62,7 +62,7 @@ void YoutubePlaylist::playList() {
     nowPlaying = true;
 }
 void YoutubePlaylist::pausePlayback() {
-    MPV_Controller::setProperty("cmdPausePlayback");
+    MPV_Controller::sendCommandFromMap("cmdPausePlayback");
     nowPaused = true;
 }
 

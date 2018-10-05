@@ -49,6 +49,8 @@ public:
     Json::Value setPlaybackMode(std::string mode);
     Json::Value getPlaybackInfo();
     
+    Json::Value setPlaybackTime(std::string time);
+    
     std::thread startThread();
     
     void sendToAll(Json::Value json);

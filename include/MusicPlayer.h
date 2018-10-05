@@ -57,6 +57,8 @@ public:
     const int getPlaylistCount() const;
     bool selectPlaylist(const std::string & playlist_id);
     
+    bool setPlaybackTime(std::string time);
+    
     
     virtual void onEvent(NewPlaylistReadyEvent & e) override;
     virtual void onEvent(FileStartPlayingEvent & e) override;

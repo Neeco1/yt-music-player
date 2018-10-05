@@ -182,9 +182,13 @@ bool MusicPlayer::selectPlaylist(const std::string & playlist_id) {
     }
 }
 
+bool MusicPlayer::setPlaybackTime(std::string time) {
+    return MPV_Controller::setProperty("playback-time", time);
+}
+
 void MusicPlayer::readDataFromJsonFile() {
     std::string pathname = std::string(getenv("HOME")) + "/websocketPlayer/playlists.json";
-    std::cout << "Pathname of json file: " << pathname << std::endl;
+    //std::cout << "Pathname of json file: " << pathname << std::endl;
     Json::Value jsonData = Utils::readJsonFromFile(pathname);
     //Create playlist objects and add them to the player
     for(Json::Value playlist : jsonData)

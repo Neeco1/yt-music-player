@@ -59,8 +59,8 @@ int MPV_Controller::getPropertyAsInt(std::string command) {
     return std::stoi(value);
 }
 
-bool MPV_Controller::setProperty(std::string command) {
-    std::string jsonResult = Utils::execCommand(commands.at(command));
+bool MPV_Controller::sendStringCommand(std::string command) {
+    std::string jsonResult = Utils::execCommand(command);
     //Parse data
     Json::Value j;
     Json::Reader reader;
@@ -75,6 +75,20 @@ bool MPV_Controller::setProperty(std::string command) {
     {
         return false;
     }
+}
+bool MPV_Controller::sendCommandFromMap(std::string command) {
+    return sendStringCommand(commands.at(command));
+}
+
+bool MPV_Controller::setProperty(std::string property, std::string data) {
+    std::stringstream ssCmd;
+    ssCmd << "echo '{ \"command\": [\"set_property\", \""
+          << property
+          << "\", \""
+          << data
+          << "\"] }' | socat - /tmp/mpvsocket";
+    std::string cmd = ssCmd.str();
+    return sendStringCommand(cmd);
 }
 
 void MPV_Controller::playMedia(std::string mediaUrl) {

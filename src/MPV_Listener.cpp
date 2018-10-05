@@ -64,11 +64,11 @@ bool MPV_Listener::connectSocket() {
 }
 
 bool MPV_Listener::handleData() {
-    char buf[100];
+    char buf[1024];
     int rxByteCount;
     
     //Read at max 1024 bytes from socket
-    while( (rxByteCount = read(sockDescriptor, buf, sizeof(buf))) > 0 )
+    while( (rxByteCount = read(sockDescriptor, buf, 1024)) > 0 )
     {
         std::string nextMsg;
         //Parse the data (read until "new line" character)
@@ -104,7 +104,6 @@ std::string MPV_Listener::parseEventString(std::string evtStr, Json::Value & ful
 }
 
 void MPV_Listener::handleEvent(std::string mpvEvt, Json::Value & fullJson) {
-    //std::cout << "MPV event: " << mpvEvt << std::endl;
     if(mpvEvt.compare("") == 0) { return; }
     
     //Observe changed properties
@@ -122,7 +121,7 @@ void MPV_Listener::handleEvent(std::string mpvEvt, Json::Value & fullJson) {
     }
     
     //File ended playing
-    if(mpvEvt.compare("end-file") == 0 || mpvEvt.compare("idle") == 0)
+    if(mpvEvt.compare("end-file") == 0)// || mpvEvt.compare("idle") == 0)
     {
         //Publish new event that playback ended
         FileEndPlayingEvent e(*this);
@@ -142,7 +141,7 @@ void MPV_Listener::observeProperty(std::string property) {
     auto status = getInstance().listenerFuture.wait_for(std::chrono::milliseconds(0));
     if(status != std::future_status::ready)
     {
-        getInstance().sendCommand("{ \"command\": [\"observe_property\", 1, \""+property+"\"] }");
+        getInstance().sendCommand("{ \"command\": [\"observe_property\", 1, \""+property+"\"] } \n");
     }
 }
 
