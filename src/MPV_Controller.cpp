@@ -3,6 +3,9 @@
 #include "jsoncpp/json/json.h"
 #include "Utils.h"
 #include <iostream>
+#include <cstdlib>
+#include <thread>
+#include <chrono>
 
 MPV_Controller::CommandMap MPV_Controller::commands  = {
     { "mpvSocketUrl", mpvSocketUrl },
@@ -28,9 +31,12 @@ MPV_Controller::CommandMap MPV_Controller::commands  = {
 
 void MPV_Controller::startMPVIdle() {
     std::stringstream ssCmd;
-    ssCmd << "mpv --no-video --idle --input-ipc-server=" << mpvSocketUrl << " > /dev/null 2>&1 &";
+    ssCmd << "mpv --really-quiet --no-video --idle "
+          << "--input-ipc-server=" << mpvSocketUrl
+          << " > /dev/null 2>&1 &";
     std::string cmd = ssCmd.str();
-    system(cmd.c_str());
+    std::system(cmd.c_str());
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 }
 
 std::string MPV_Controller::getProperty(std::string command) {
@@ -99,5 +105,5 @@ void MPV_Controller::playMedia(std::string mediaUrl) {
           << "\"] }' | socat - "
           << mpvSocketUrl;
     std::string cmd = ssCmd.str();
-    system(cmd.c_str());
+    std::system(cmd.c_str());
 }
