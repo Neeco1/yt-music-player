@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include <cstdio>
 
+std::mutex Utils::jsonFileMutex;
+
 std::string Utils::execCommand(std::string & cmd) {
     std::array<char, 128> buffer;
     std::string result;
@@ -75,30 +77,39 @@ Json::Value Utils::readJsonFromFile(std::string pathname) {
     //Check if json file exists
     std::string jsonStr;
     struct stat info;
-    if(stat(pathname.c_str(), &info) == 0) // "stat == 0" means "does exist"
+    
     {
-        //Read file
-        std::ifstream inFile(pathname);
-        if (!inFile)
+        std::lock_guard<std::mutex> lock(Utils::jsonFileMutex);
+        if(stat(pathname.c_str(), &info) == 0) // "stat == 0" means "does exist"
         {
-            std::cerr << "Unable to open file \"playlists.json\"!" << std::endl;
-            exit(1);
+            //Read file
+            std::ifstream inFile(pathname);
+            if (!inFile)
+            {
+                std::cerr << "Unable to open file \"playlists.json\"!" << std::endl;
+                exit(1);
+            }
+            //Reserve memory in string
+            inFile.seekg(0, std::ios::end);
+            jsonStr.reserve(inFile.tellg());
+            inFile.seekg(0, std::ios::beg);
+            //Read data into string
+            jsonStr.assign((std::istreambuf_iterator<char>(inFile)),
+                std::istreambuf_iterator<char>());
+            inFile.close();
         }
-        //Reserve memory in string
-        inFile.seekg(0, std::ios::end);
-        jsonStr.reserve(inFile.tellg());
-        inFile.seekg(0, std::ios::beg);
-        //Read data into string
-        jsonStr.assign((std::istreambuf_iterator<char>(inFile)),
-            std::istreambuf_iterator<char>());
-        inFile.close();
     }
+    //end of lock_guard
+    
     if(jsonStr.length() == 0) { return Json::Value(); }
     
     //Parse the json
     Json::Value jsonData;
     Json::Reader reader;
     bool success = reader.parse(jsonStr.c_str(), jsonData);
+    
+    //Remove file, in case the parsing failed (this means, something invalid is
+    //written inside)
     if (!success) { std::remove(pathname.c_str()); return Json::Value(); }
     return jsonData;
 }
@@ -106,6 +117,8 @@ Json::Value Utils::readJsonFromFile(std::string pathname) {
 bool Utils::writeJsonToFile(Json::Value json, std::string pathname) {
     std::string jsonStr;
     std::ofstream jsonFile;
+    
+    std::lock_guard<std::mutex> lock(Utils::jsonFileMutex);
     jsonFile.open(pathname, std::ios::out | std::ios::trunc);
     if(jsonFile.is_open())
     {

@@ -4,11 +4,15 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include "Types.h"
 #include "jsoncpp/json/json.h"
 #include "Playlist.h"
 
 class Utils {
+private:
+    static std::mutex jsonFileMutex;
+    
 public:
     static std::string execCommand(std::string & cmd);
     static TrackDuration secondsToTrackDuration(unsigned int seconds);
