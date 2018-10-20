@@ -155,6 +155,23 @@ function handleWsMessage(e) {
 
         return;
     }
+    //Gets published when a playlist is being updated
+    if(jsonMsg.data.status === "playlist_fetch_start")
+    {
+        var playlist_id = jsonMsg.data.playlist_id;
+        var playlist_name = jsonMsg.data.playlist_name;
+        var playlistDiv = document.getElementById("playlist"+playlist_id);
+        //Check if playlist block is there
+        if(playlistDiv)
+        {
+            //Show loading overlay
+            var overlayToRemove = playlistDiv.getElementsByClassName("progress_overlay")[0];
+            if(!overlayToRemove)
+            {
+                playlistDiv.prepend(createLoadingDom());
+            }
+        }
+    }
     if(jsonMsg.data.status === "playlist_selected")
     {
         startPlaying();
@@ -283,6 +300,22 @@ window.onload = function() {
     initGui();
 }
 
+function createLoadingDom() {
+    var progressDiv = document.createElement("div");
+    progressDiv.setAttribute("class", "progress_overlay");
+    var loaderDiv1 = document.createElement("div");
+    loaderDiv1.classList.add("lds-css");
+    loaderDiv1.classList.add("ng-scope");
+    var loaderDiv2 = document.createElement("div");
+    loaderDiv2.style.width = "60px";
+    loaderDiv2.style.height = "60px";
+    loaderDiv2.classList.add("lds-eclipse");
+    loaderDiv2.appendChild(document.createElement("div"));
+    loaderDiv1.appendChild(loaderDiv2);
+    progressDiv.appendChild(loaderDiv1);
+    return progressDiv;
+}
+
 function playlistToDom(playlist, in_progress) {
     var blockDiv = document.createElement("div");
     blockDiv.setAttribute("class", "playlist_block");
@@ -295,18 +328,7 @@ function playlistToDom(playlist, in_progress) {
     blockDiv.style.backgroundColor = getRandomColor();
 
     if(in_progress) {
-        var progressDiv = document.createElement("div");
-        progressDiv.setAttribute("class", "progress_overlay");
-        var loaderDiv1 = document.createElement("div");
-        loaderDiv1.classList.add("lds-css");
-        loaderDiv1.classList.add("ng-scope");
-        var loaderDiv2 = document.createElement("div");
-        loaderDiv2.style.width = "60px";
-        loaderDiv2.style.height = "60px";
-        loaderDiv2.classList.add("lds-eclipse");
-        loaderDiv2.appendChild(document.createElement("div"));
-        loaderDiv1.appendChild(loaderDiv2);
-        progressDiv.appendChild(loaderDiv1);
+        var progressDiv = createLoadingDom();
         blockDiv.appendChild(progressDiv);
     }
 

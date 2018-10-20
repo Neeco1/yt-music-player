@@ -19,6 +19,14 @@ Playlist::Playlist() : currentTrack(0)
     setName("New List");
 }
 
+void Playlist::setPlaylistUrl(std::string playlistUrl) {
+    this->playlistUrl = playlistUrl;
+}
+
+std::string Playlist::getPlaylistUrl() {
+    return this->playlistUrl;
+}
+
 void Playlist::setListId(const std::string & listId) {
     this->listId = listId;
 }

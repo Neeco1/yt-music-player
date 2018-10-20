@@ -11,9 +11,14 @@
 #include "EventBus/EventBus.hpp"
 #include "events/NewPlaylistReadyEvent.h"
 #include "events/NewPlaylistFetchFailedEvent.h"
+#include "events/PlaylistFetchStartEvent.h"
 
 void YoutubeHandler::fetchPlaylistInfo(std::string playlistId, std::string name) {
     try {
+        //Fire event that fetch started
+        PlaylistFetchStartEvent e1(*this, playlistId, name);
+        EventBus::FireEvent(e1);
+    
         std::stringstream command;
         command << "youtube-dl " << playlistId << " -J -i ";
         std::string cmdStr = command.str();
@@ -62,8 +67,8 @@ void YoutubeHandler::fetchPlaylistInfo(std::string playlistId, std::string name)
         }
         
         //Publish new event that playlist is ready
-        NewPlaylistReadyEvent e(*this, ytpl);
-        EventBus::FireEvent(e);
+        NewPlaylistReadyEvent e2(*this, ytpl);
+        EventBus::FireEvent(e2);
         
     }
     catch(...)

@@ -13,6 +13,8 @@
 #include "events/FileStartPlayingEvent.h"
 #include "events/PlaybackTimeUpdatedEvent.h"
 
+class PlaylistUpdater;
+
 class MusicPlayer : public EventHandler<NewPlaylistReadyEvent>,
                     public EventHandler<FileEndPlayingEvent>,
                     public EventHandler<FileStartPlayingEvent>,
@@ -38,10 +40,14 @@ private:
     
     PlaybackState playbackState;
     PlaybackMode playbackMode;
+    
+    PlaylistUpdater * playlistUpdater;
 
 public:
     MusicPlayer();
     ~MusicPlayer();
+    
+    static std::string addPlaylistFromUrl(std::string url, std::string name);
     
     void readDataFromJsonFile();
     void writeDataToJsonFile();
@@ -57,7 +63,9 @@ public:
     bool setPlaybackMode(PlaybackMode mode);
     
     bool addPlaylist(const std::shared_ptr<Playlist> playlist);
-    std::string addPlaylistFromUrl(std::string url, std::string name);
+    
+    bool updatePlaylists();
+    
     const std::vector<std::shared_ptr<Playlist>> getPlaylists() const;
     const int getPlaylistCount() const;
     bool selectPlaylist(const std::string & playlist_id);

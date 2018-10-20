@@ -10,14 +10,11 @@ class Playlist;
 
 class YoutubePlaylist : public Playlist {
 private:
-    std::string playlistUrl;
     std::atomic<bool> stopPlaybackFlag;
     
 public:
     YoutubePlaylist(std::string playlistUrl);
     YoutubePlaylist(Json::Value json);
-    
-    void setPlaylistUrl(std::string playlistUrl);
     
     Json::Value getJson();
 };

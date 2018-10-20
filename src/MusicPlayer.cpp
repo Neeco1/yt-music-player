@@ -1,3 +1,4 @@
+#include "PlaylistUpdater.h"
 #include "MusicPlayer.h"
 #include "Utils.h"
 #include <iostream>
@@ -7,19 +8,20 @@
 #include <sstream>
 #include <array>
 #include <memory>
-#include <regex>
+#include <chrono>
 #include "youtube/YoutubeHandler.h"
 #include "youtube/YoutubePlaylist.h"
 #include "EventBus/HandlerRegistration.hpp"
 #include "EventBus/EventBus.hpp"
 #include "MPV_Controller.h"
 #include "MPV_Listener.h"
-#include <chrono>
+#include "URLParser.h"
 
 MusicPlayer::MusicPlayer()
 : currentPlaylist(nullptr),
   stopPressed(false), prevPressed(false), nextPressed(false),
-  currentPlaybackTime(0), playbackState(Stopped)
+  currentPlaybackTime(0), playbackState(Stopped),
+  playlistUpdater(new PlaylistUpdater(this))
 {
     
     Utils::checkDirectory();
@@ -189,22 +191,21 @@ bool MusicPlayer::addPlaylist(const std::shared_ptr<Playlist> playlistPtr) {
 std::string MusicPlayer::addPlaylistFromUrl(std::string url, std::string name) {
     if(url.empty()) { return ""; }
     
-    //Youtube Playlist URL regex
-    std::regex yt_plist_regex("^.*(youtu.be\\/|list=)([^#\\&\\?]*).*");
-    
-    std::smatch matches;
-    //Find out type of playlist
-    if(std::regex_match(url, matches, yt_plist_regex))
+    std::string listId;
+    if(URLParser::parseURL_YoutubePlaylist(url, listId))
     {
         //Create new Youtube Handler to fetch playlist info (using youtube-dl)
-        std::string listId = matches[2].str();
         YoutubeHandler ytHandler;
         ytHandler.newPlaylist(listId, name);
         return listId;
     }
-    return "";
     //else if(spotify)
-        //...
+    //...
+    return "";
+}
+
+bool MusicPlayer::updatePlaylists() {
+    playlistUpdater->startUpdate();
 }
 
 const std::vector<std::shared_ptr<Playlist>> MusicPlayer::getPlaylists() const {

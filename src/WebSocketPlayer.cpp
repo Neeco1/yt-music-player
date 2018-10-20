@@ -16,6 +16,7 @@ WebSocketPlayer::WebSocketPlayer(int port)
     initCommandEndpoint();
     handlerRegs.push_back(EventBus::AddHandler<NewPlaylistReadyEvent>(*this));
     handlerRegs.push_back(EventBus::AddHandler<NewPlaylistFetchFailedEvent>(*this));
+    handlerRegs.push_back(EventBus::AddHandler<PlaylistFetchStartEvent>(*this));
 }
 
 WebSocketPlayer::~WebSocketPlayer() {
@@ -129,6 +130,12 @@ void WebSocketPlayer::initCommandEndpoint() {
                 responseJson["error"] = 1;
                 responseJson["data"]["errorCode"] = "MALFORMED_REQUEST";
             }
+        }
+        else if(command.compare("update_playlists") == 0)
+        {
+            responseJson = updatePlaylists();
+            sendToAll(responseJson);
+            return;
         }
         else if(command.compare("select_playlist") == 0)
         {
@@ -301,7 +308,7 @@ Json::Value WebSocketPlayer::setVolume(unsigned int percentage) {
 
 Json::Value WebSocketPlayer::addPlaylist(const std::string & url, const std::string & name) {
     Json::Value responseJson;
-    std::string result = player.addPlaylistFromUrl(url, name);
+    std::string result = MusicPlayer::addPlaylistFromUrl(url, name);
     if(!result.compare("") == 0)
     {
         responseJson["error"] = 0;
@@ -399,6 +406,22 @@ Json::Value WebSocketPlayer::getPlaybackInfo() {
     return responseJson;
 }
 
+Json::Value WebSocketPlayer::updatePlaylists() {
+    Json::Value responseJson;
+    if(player.updatePlaylists())
+    {
+        responseJson["error"] = 0;
+        responseJson["data"]["status"] = "update_playlists";
+    }
+    else
+    {
+        responseJson["error"] = 1;
+        responseJson["data"]["status"] = "error";
+        responseJson["data"]["errorCode"] = "PLAYER_ERROR";
+    }
+    return responseJson;
+}
+
 Json::Value WebSocketPlayer::setPlaybackTime(std::string time) {
     Json::Value responseJson;
     if(player.setPlaybackTime(time))
@@ -441,5 +464,15 @@ void WebSocketPlayer::onEvent(NewPlaylistFetchFailedEvent & e) {
     responseJson["error"] = 1;
     responseJson["data"]["status"] = "playlist_fetch_failed";
     responseJson["data"]["playlist_id"] = e.getPlaylistId();
+    sendToAll(responseJson);
+}
+
+void WebSocketPlayer::onEvent(PlaylistFetchStartEvent & e) {
+    //Notify all clients that a playlist is being fetched
+    Json::Value responseJson;
+    responseJson["error"] = 0;
+    responseJson["data"]["status"] = "playlist_fetch_start";
+    responseJson["data"]["playlist_id"] = e.getPlaylistId();
+    responseJson["data"]["playlist_name"] = e.getPlaylistName();
     sendToAll(responseJson);
 }

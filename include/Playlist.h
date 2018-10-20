@@ -22,12 +22,17 @@ protected:
     std::vector<std::shared_ptr<Track>> tracks;
     std::vector<std::shared_ptr<Track>> shuffledOrder;
     int currentTrack;
+    
+    std::string playlistUrl;
 
 public:
     Playlist();
     
     //Virtual destructor for base class to avoid resource leaks
     virtual ~Playlist() {}
+    
+    void setPlaylistUrl(std::string playlistUrl);
+    std::string getPlaylistUrl();
     
     void setListId(const std::string & listId);
     std::string getListId();

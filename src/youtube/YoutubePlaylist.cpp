@@ -9,8 +9,10 @@
 #include "events/PlaybackStoppedEvent.h"
 
 YoutubePlaylist::YoutubePlaylist(std::string playlistUrl)
-: Playlist(), playlistUrl(playlistUrl), stopPlaybackFlag(false)
-{ }
+: Playlist(), stopPlaybackFlag(false)
+{
+    this->playlistUrl = playlistUrl;
+}
 
 YoutubePlaylist::YoutubePlaylist(Json::Value json)
 : Playlist(), stopPlaybackFlag(false)
@@ -22,10 +24,6 @@ YoutubePlaylist::YoutubePlaylist(Json::Value json)
     {
         addTrack(std::make_shared<Track>(track));
     }
-}
-
-void YoutubePlaylist::setPlaylistUrl(std::string playlistUrl) {
-    this->playlistUrl = playlistUrl;
 }
 
 Json::Value YoutubePlaylist::getJson() {

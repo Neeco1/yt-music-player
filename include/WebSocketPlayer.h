@@ -11,12 +11,14 @@
 
 #include "events/NewPlaylistReadyEvent.h"
 #include "events/NewPlaylistFetchFailedEvent.h"
+#include "events/PlaylistFetchStartEvent.h"
 
 using WsServer = SimpleWeb::SocketServer<SimpleWeb::WS>;
 using WsEndpoint = SimpleWeb::SocketServer<SimpleWeb::WS>::Endpoint;
 
 class WebSocketPlayer : public EventHandler<NewPlaylistReadyEvent>,
-                        public EventHandler<NewPlaylistFetchFailedEvent>
+                        public EventHandler<NewPlaylistFetchFailedEvent>,
+                        public EventHandler<PlaylistFetchStartEvent>
 {
 private:
     int port;
@@ -49,6 +51,8 @@ public:
     Json::Value setPlaybackMode(std::string mode);
     Json::Value getPlaybackInfo();
     
+    Json::Value updatePlaylists();
+    
     Json::Value setPlaybackTime(std::string time);
     
     std::thread startThread();
@@ -57,6 +61,7 @@ public:
     
     virtual void onEvent(NewPlaylistReadyEvent & e) override;
     virtual void onEvent(NewPlaylistFetchFailedEvent & e) override;
+    virtual void onEvent(PlaylistFetchStartEvent & e) override;
     
 };
 
