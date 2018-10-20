@@ -17,6 +17,10 @@ enum SupportedSources {
     FromDisk, YouTube
 };
 
+enum PlaybackState {
+    Paused, Stopped, Playing
+};
+
 struct PlaybackInfo {
     std::string state;
     std::string title;

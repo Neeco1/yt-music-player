@@ -28,53 +28,11 @@ void YoutubePlaylist::setPlaylistUrl(std::string playlistUrl) {
     this->playlistUrl = playlistUrl;
 }
 
-void YoutubePlaylist::playTrack(int trackIndex) {
-    auto track = tracks[trackIndex];
-    MPV_Controller::playMedia(track->getUrl());
-    nowPlaying = true;
-    stopPlaybackFlag = false;
-}
-
-void YoutubePlaylist::stopPlayback() {
-    //stopPlaybackFlag = true;
-    MPV_Controller::sendCommandFromMap("cmdStopPlayback");
-    if(!isPlaying())
-    {
-        currentTrack = 0;
-    }
-    nowPlaying = false;
-    stopPlaybackFlag = true;
-}
-
-void YoutubePlaylist::playList() {
-    //Resume if paused
-    if(isPaused())
-    {
-        MPV_Controller::sendCommandFromMap("cmdUnpausePlayback");
-        nowPaused = false;
-        nowPlaying = true;
-        return;
-    }
-    
-    //If not paused, start playing
-    playTrack(currentTrack);
-    stopPlaybackFlag = false;
-    nowPlaying = true;
-}
-void YoutubePlaylist::pausePlayback() {
-    MPV_Controller::sendCommandFromMap("cmdPausePlayback");
-    nowPaused = true;
-}
-
 Json::Value YoutubePlaylist::getJson() {
     Json::Value playlist;
     playlist["name"] = name;
     playlist["id"] = listId;
     playlist["url"] = playlistUrl;
-    
-    if(isPlaying()) {
-        playlist["playing"] = "true";
-    }
     
     Json::Value tracksJson;
     int i = 0;

@@ -19,7 +19,7 @@
 MusicPlayer::MusicPlayer()
 : currentPlaylist(nullptr),
   stopPressed(false), prevPressed(false), nextPressed(false),
-  currentPlaybackTime(0)
+  currentPlaybackTime(0), playbackState(Stopped)
 {
     
     Utils::checkDirectory();
@@ -47,53 +47,94 @@ MusicPlayer::~MusicPlayer() {
 }
 
 bool MusicPlayer::startPlayback() {
-    if(!currentPlaylist || (currentPlaylist->isPlaying() && !currentPlaylist->isPaused()))
+    //Don't do anything if no playlist is selected or if it is already playing
+    if(!currentPlaylist || (playbackState == Playing))
     {
         return false;
     }
-    stopPressed = false;
-    currentPlaylist->playList();
-    return true;
+    
+    //Resume if paused
+    if(playbackState == Paused)
+    {
+        MPV_Controller::sendCommandFromMap("cmdUnpausePlayback");
+        playbackState = Playing;
+        return true;
+    }
+    
+    //Start playback if was stopped previously
+    if(playbackState == Stopped)
+    {
+        auto currentTrack = currentPlaylist->getCurrentTrack();
+        MPV_Controller::playMedia(currentTrack->getUrl());
+        playbackState = Playing;
+        return true;
+    }
+    
+    return false;
 }
 
 bool MusicPlayer::stopPlayback() {
     if(!currentPlaylist) { return false; }
-    if(currentPlaylist->isPlaying())
+    
+    //First press: Stop actual playback
+    if(playbackState == Playing)
     {
-        currentPlaylist->stopPlayback();
+        MPV_Controller::sendCommandFromMap("cmdStopPlayback");
+        playbackState = Stopped;
         stopPressed = true;
         return true;
     }
+    
+    //Second and further presses of stop: Reset current track
+    if(playbackState == Stopped)
+    {
+        currentPlaylist->setCurrentTrackNumber(0);
+        playbackState = Stopped;
+        stopPressed = true;
+        return true;
+    }
+    return false;
 }
 
 bool MusicPlayer::pausePlayback() {
     if(!currentPlaylist) { return false; }
-    if(currentPlaylist->isPlaying())
+    
+    //Only do something if we are currently playing
+    if(playbackState == Playing)
     {
-        currentPlaylist->pausePlayback();
+        MPV_Controller::sendCommandFromMap("cmdPausePlayback");
+        playbackState = Paused;
         return true;
     }
     return false;
 }
 bool MusicPlayer::nextTrack() {
     if(!currentPlaylist) { return false; }
-    if(currentPlaylist->isPlaying())
-    {
-        currentPlaylist->nextTrack();
-        nextPressed = true;
-        return true;
-    }
-    return false;
+    
+    //Only go to next if we are currently playing
+    //if(playbackState == Playing)
+    //{
+    auto nextTrack = currentPlaylist->nextTrack();
+    if(!nextTrack) { return false; }
+    MPV_Controller::playMedia(nextTrack->getUrl());
+    nextPressed = true;
+    return true;
+    //}
+    //return false;
 }
 bool MusicPlayer::previousTrack() {
     if(!currentPlaylist) { return false; }
-    if(currentPlaylist->isPlaying())
-    {
-        currentPlaylist->previousTrack();
-        prevPressed = true;
-        return true;
-    }
-    return false;
+    
+    //Only go to previous if we are currently playing
+    //if(playbackState == Playing)
+    //{
+    auto prevTrack = currentPlaylist->previousTrack();
+    if(!prevTrack) { return false; }
+    MPV_Controller::playMedia(prevTrack->getUrl());
+    prevPressed = true;
+    return true;
+    //}
+    //return false;
 }
 
 bool MusicPlayer::setVolume(unsigned int volume) {
@@ -109,22 +150,34 @@ bool MusicPlayer::setVolume(unsigned int volume) {
 PlaybackInfo MusicPlayer::getPlaybackInfo() {
     PlaybackInfo info;
     if(!currentPlaylist) { return info; }
+    
     //Build playback info object
     auto track = currentPlaylist->getCurrentTrack();
-    if(currentPlaylist->isPaused()) { info.state = "paused"; }
-    else if(currentPlaylist->isPlaying()) { info.state = "playing"; }
+    if(playbackState == Paused) { info.state = "paused"; }
+    else if(playbackState == Playing) { info.state = "playing"; }
+    else if(playbackState == Stopped) { info.state = "stopped"; }
+    
     info.title = track->getName();
     info.trackId = track->getTrackId();
     info.playbackTime = currentPlaybackTime;
     info.duration = track->getDurationSeconds();
     info.playbackMode = Normal;
     info.thumbUrl = track->getThumbUrl();
+    
     return info;
 }
 
 bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {
     if(!currentPlaylist) { return false; }
-    currentPlaylist->setPlaybackMode(mode);
+    this->playbackMode = playbackMode;
+    
+    //TODO handle Shuffle
+    /*if(playbackMode == Shuffle)
+    {
+        shuffledOrder = tracks;
+        std::random_shuffle ( shuffledOrder.begin(), shuffledOrder.end() );
+    }*/
+    
     return true;
 }
 
@@ -222,11 +275,17 @@ void MusicPlayer::onEvent(FileStartPlayingEvent & e) {
 void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
     currentPlaybackTime = 0;
     if(!currentPlaylist) { return; }
-    //Prevent playback of next track from this event after user pressed
-    //stop, previous or next
-    if(stopPressed || prevPressed || nextPressed) { return; }
+    //Prevent playback of next track from this event immediately after user
+    //pressed stop, previous or next
+    if(stopPressed || prevPressed || nextPressed)
+    {
+        stopPressed = false;
+        prevPressed = false;
+        nextPressed = false;
+        return;
+    }
     
-    currentPlaylist->nextTrack();
+    nextTrack();
 }
 
 void MusicPlayer::onEvent(PlaybackTimeUpdatedEvent & e) {

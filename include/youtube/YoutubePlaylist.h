@@ -19,11 +19,6 @@ public:
     
     void setPlaylistUrl(std::string playlistUrl);
     
-    void playTrack(int trackIndex);
-    void playList();
-    void stopPlayback();
-    void pausePlayback();
-    
     Json::Value getJson();
 };
 

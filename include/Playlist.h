@@ -21,10 +21,7 @@ protected:
     std::string name;
     std::vector<std::shared_ptr<Track>> tracks;
     std::vector<std::shared_ptr<Track>> shuffledOrder;
-    PlaybackMode playbackMode;
     int currentTrack;
-    bool nowPlaying;
-    bool nowPaused;
 
 public:
     Playlist();
@@ -39,25 +36,15 @@ public:
     const std::string & getName();
     
     void addTrack(const std::shared_ptr<Track> track);
-    
-    void setPlaybackMode(PlaybackMode playbackMode);
     const std::vector<std::shared_ptr<Track>> & getAllTracks() const;
     const unsigned int getTrackCount() const;
-    bool isPlaying() const;
-    bool isPaused() const;
     
+    void setCurrentTrackNumber(unsigned int track);
     unsigned int getCurrentTrackNumber();
     std::shared_ptr<Track> getCurrentTrack();
     
-    bool startPlaying();
     std::shared_ptr<Track> nextTrack();
     std::shared_ptr<Track> previousTrack();
-    
-    //Virtual method. Subclasses define here how a track can be played and stopped
-    virtual void playTrack(int trackIndex) = 0;
-    virtual void playList() = 0;
-    virtual void stopPlayback() = 0;
-    virtual void pausePlayback() = 0;
     
     virtual Json::Value getJson() = 0;
     

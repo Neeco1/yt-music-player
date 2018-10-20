@@ -28,11 +28,16 @@ private:
     //Handler pointer for NewPlaylistReadyEvent
     std::vector<HandlerRegistration*> handlerRegs;
     
+    //Three flags to prevent restart of playback after the press of a button
+    //(event "FileEnd" will be fired after press and would retrigger a playback)
     bool stopPressed;
     bool prevPressed;
     bool nextPressed;
     
     unsigned int currentPlaybackTime;
+    
+    PlaybackState playbackState;
+    PlaybackMode playbackMode;
 
 public:
     MusicPlayer();
