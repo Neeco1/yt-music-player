@@ -10,7 +10,7 @@
 #include "jsoncpp/json/json.h"
 #include "Utils.h"
 
-Playlist::Playlist() : currentTrack(0)
+Playlist::Playlist() : currentTrack(0), playing(false)
 {
     //Initially set timestamped id
     std::stringstream ss;
@@ -51,6 +51,13 @@ const std::vector<std::shared_ptr<Track>> & Playlist::getAllTracks() const {
 
 const unsigned int Playlist::getTrackCount() const {
     return tracks.size();
+}
+
+void Playlist::setPlaying(bool value) {
+    playing = value;
+}
+bool Playlist::isPlaying() {
+    return playing;
 }
 
 void Playlist::setCurrentTrackNumber(unsigned int trackNumber) {

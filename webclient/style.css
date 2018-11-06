@@ -321,3 +321,97 @@ input[name=playlist_name] {
   -webkit-transform: translate(-30px, -30px) scale(0.3) translate(30px, 30px);
   transform: translate(-30px, -30px) scale(0.3) translate(30px, 30px);
 }
+
+
+/***** Playlist overlay ******/
+#playlist_overlay {
+    display:none;
+    transition: all 0.3s ease-out;
+    position: fixed;
+    top: 120px;
+    bottom:70px;
+    left:20px;
+    right:20px;
+    box-shadow: 0px 0px 10px #000000;
+    border-radius:10px;
+    height:65% !important;
+    overflow: hidden;
+    user-select: none;
+}
+.visible {
+    display:block !important;
+    visibility: visible;
+}
+#playlist_overlay #closePlaylistOverlay {
+    position:absolute;
+    font-size:20px;
+    margin:18px 0px 0px 15px;
+}
+
+#playlistoverlay_title {
+    border-top-left-radius:10px;
+    border-top-right-radius:10px;
+    padding:20px 0px 20px 0px;
+    background:rgba(242, 242, 242, 0.9);
+    font-weight: bold;
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+#tracks_wrapper {
+    height:100%;
+    overflow-x: hidden;
+}
+#playlistoverlay_tracks {
+    display: table;
+    border-collapse:collapse; 
+    background:rgba(200, 200, 200, 0.9);
+}
+
+.track_row {
+    display:table-row;
+    width:100%;
+    padding:10px 5px 10px 5px;
+    height:20px;
+    overflow: hidden;
+    margin:0 auto;
+    border-bottom:1px solid rgba(255,255,255,0.2);
+    height:40px;
+    transition: background-color 0.3s ease-out;
+    font-family: sans-serif;
+    font-size: 12px;
+}
+.track_row:hover {
+    background-color:rgba(255,255,255,0.2);
+}
+
+.track_row .img_wrapper {
+    display:table-cell; 
+    vertical-align: middle;
+}
+
+.track_row .img_wrapper img {
+    width:50px;
+    vertical-align: middle;
+}
+
+.track_row span {
+    display:table-cell; 
+    width:100%;
+    text-align: left;
+    vertical-align: middle;
+    padding-left:10px;
+}
+.track_row .track_duration {
+    display:table-cell; 
+    vertical-align: middle;
+    padding-right:10px;
+}
+
+@media screen and (min-width: 1000px) {
+    #playlist_overlay {
+        width:500px;
+        left:50%;
+        margin-left:-250px;       
+    }
+}

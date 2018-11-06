@@ -57,6 +57,7 @@ public:
     bool pausePlayback();
     bool nextTrack();
     bool previousTrack();
+    bool playTrackFromCurrentListWithIndex(unsigned int index);
     bool setVolume(unsigned int vol);
     
     PlaybackInfo getPlaybackInfo();
@@ -71,7 +72,6 @@ public:
     bool selectPlaylist(const std::string & playlist_id);
     
     bool setPlaybackTime(std::string time);
-    
     
     virtual void onEvent(NewPlaylistReadyEvent & e) override;
     virtual void onEvent(FileStartPlayingEvent & e) override;

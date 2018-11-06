@@ -41,5 +41,9 @@ Json::Value YoutubePlaylist::getJson() {
     }
     playlist["tracks"] = tracksJson;
     playlist["type"] = "YouTube";
+    if(isPlaying())
+    {
+        playlist["playing"] = true;
+    }
     return playlist;
 }

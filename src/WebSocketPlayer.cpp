@@ -39,7 +39,7 @@ std::thread WebSocketPlayer::startThread() {
         }
         catch(...)
         {
-            std::cerr << "Failed to start socket server..." << std::endl;
+            std::cerr << "Error occurred while running the socket server..." << std::endl;
             exit(1);
         }
     }));
@@ -146,6 +146,27 @@ void WebSocketPlayer::initCommandEndpoint() {
             {
                 responseJson = selectPlaylist(data["playlist_id"].asString());
                 sendToAll(responseJson);
+                return;
+            }
+            else
+            {
+                responseJson["error"] = 1;
+                responseJson["data"]["errorCode"] = "MALFORMED_REQUEST";
+            }
+        }
+        else if(command.compare("play_track_from_list") == 0)
+        {
+            /**
+             * Data format: { "playlist_id" : "some_valid_playlist_id",
+             *                "track_index" : <int> }
+             */
+            if(data.isMember("playlist_id") && data.isMember("track_index"))
+            {
+                //Select playlist
+                responseJson = selectPlaylist(data["playlist_id"].asString());
+                sendToAll(responseJson);
+                //Play track with given index
+                player.playTrackFromCurrentListWithIndex(data["track_index"].asUInt());
                 return;
             }
             else

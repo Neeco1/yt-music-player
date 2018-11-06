@@ -33,7 +33,7 @@ MusicPlayer::MusicPlayer()
     handlerRegs.push_back(EventBus::AddHandler<PlaybackTimeUpdatedEvent>(*this));
     
     MPV_Controller::startMPVIdle();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     MPV_Listener::startMPVListener();
 }
 
@@ -59,6 +59,7 @@ bool MusicPlayer::startPlayback() {
     if(playbackState == Paused)
     {
         MPV_Controller::sendCommandFromMap("cmdUnpausePlayback");
+        currentPlaylist->setPlaying(true);
         playbackState = Playing;
         return true;
     }
@@ -67,6 +68,7 @@ bool MusicPlayer::startPlayback() {
     if(playbackState == Stopped)
     {
         auto currentTrack = currentPlaylist->getCurrentTrack();
+        currentPlaylist->setPlaying(true);
         MPV_Controller::playMedia(currentTrack->getUrl());
         playbackState = Playing;
         return true;
@@ -84,6 +86,7 @@ bool MusicPlayer::stopPlayback() {
         MPV_Controller::sendCommandFromMap("cmdStopPlayback");
         playbackState = Stopped;
         stopPressed = true;
+        currentPlaylist->setPlaying(false);
         return true;
     }
     
@@ -91,6 +94,7 @@ bool MusicPlayer::stopPlayback() {
     if(playbackState == Stopped)
     {
         currentPlaylist->setCurrentTrackNumber(0);
+        currentPlaylist->setPlaying(false);
         playbackState = Stopped;
         stopPressed = true;
         return true;
@@ -137,6 +141,13 @@ bool MusicPlayer::previousTrack() {
     return true;
     //}
     //return false;
+}
+
+bool MusicPlayer::playTrackFromCurrentListWithIndex(unsigned int index) {
+    if(!currentPlaylist) { return false; }
+    
+    currentPlaylist->setCurrentTrackNumber(index);
+    return startPlayback();
 }
 
 bool MusicPlayer::setVolume(unsigned int volume) {
@@ -228,6 +239,7 @@ bool MusicPlayer::selectPlaylist(const std::string & playlist_id) {
         auto playlistPtr = playlists.at(playlist_id);
         stopPlayback();
         currentPlaylist = playlistPtr;
+        currentPlaylist->setPlaying(true);
         return true;
     }
     catch(std::out_of_range ex)

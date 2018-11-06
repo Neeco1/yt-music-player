@@ -24,6 +24,8 @@ protected:
     int currentTrack;
     
     std::string playlistUrl;
+    
+    bool playing;
 
 public:
     Playlist();
@@ -43,6 +45,9 @@ public:
     void addTrack(const std::shared_ptr<Track> track);
     const std::vector<std::shared_ptr<Track>> & getAllTracks() const;
     const unsigned int getTrackCount() const;
+    
+    void setPlaying(bool value);
+    bool isPlaying();
     
     void setCurrentTrackNumber(unsigned int track);
     unsigned int getCurrentTrackNumber();

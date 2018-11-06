@@ -174,12 +174,12 @@ function handleWsMessage(e) {
     }
     if(jsonMsg.data.status === "playlist_selected")
     {
-        startPlaying();
         var listId = jsonMsg.data.playlist_id;
         try
         {
             document.getElementById("playlist"+currentPlaylistId).classList.remove("now_playing");
-        } catch(e) {} //Catch, if nothing is selected
+        } 
+        catch(e) {} //Catch, if nothing is selected
         currentPlaylistId = listId;
         document.getElementById("playlist"+listId).classList.add("now_playing");
         return;
@@ -280,9 +280,29 @@ function initGui() {
     });
     newPlaySendBtn.removeAttribute("disabled");
 
+    //Playlist overlay component
+    var closePlaylistOverlay = document.getElementById("closePlaylistOverlay");
+    closePlaylistOverlay.addEventListener("click", function() {
+        hidePlaylistOverlay();
+    });
+
     //Progress bar event handlers
     var progressContainer = document.getElementById("progress_container");
     progressContainer.addEventListener("click", handleProgressClick, true);
+
+    //Add key listeners
+    document.onkeydown = function(evt) {
+        evt = evt || window.event;
+        var isEscape = false;
+        if ("key" in evt) {
+            isEscape = (evt.key == "Escape" || evt.key == "Esc");
+        } else {
+            isEscape = (evt.keyCode == 27);
+        }
+        if (isEscape) {
+            hidePlaylistOverlay();
+        }
+    };
 }
 
 function showNowPlaying() {
@@ -338,7 +358,8 @@ function playlistToDom(playlist, in_progress) {
     link.setAttribute("class", "title");
     link.setAttribute("href", "#");
     link.addEventListener("click", function() {
-        wsConn.send('{ "cmd" : "select_playlist", "data" : {"playlist_id" : "'+playlist.id+'" } }');
+        loadPlaylistDataToOverlay(playlist);
+        showPlaylistOverlay();
     });
     var span = document.createElement("span");
     span.innerHTML = playlist.name;
@@ -360,6 +381,10 @@ function showPlaylists() {
 function playList(list_id) {
     if(list_id.trim() === "") return;
     wsConn.send('{ "cmd" : "select_playlist", "data" : {"playlist_id" : "'+list_id+'" } }');
+}
+
+function playTrackFromList(playlist_id, track_index) {
+    wsConn.send('{ "cmd" : "play_track_from_list", "data" : {"playlist_id" : "'+playlist_id+'", "track_index" : '+track_index+' } }');
 }
 
 function startPlaying() {
@@ -405,6 +430,67 @@ function handleProgressClick(e) {
     wsConn.send('{ "cmd" : "setPlaybackTime", "data" : {"time" : "' + newTime + '"} }');
 }
 
+function loadPlaylistDataToOverlay(playlist) {
+    function createTrackRow(track, trackIndex) {
+        var row = document.createElement("div");
+        row.classList.add("track_row");
+        row.addEventListener("click", function() {
+            playTrackFromList(playlist.id, trackIndex);
+        });
+
+        //Track image
+        var imgWrapper = document.createElement("div");
+        imgWrapper.classList.add("img_wrapper");
+        var img = document.createElement("img");
+        img.setAttribute("src", track.thumbUrl);
+        imgWrapper.appendChild(img)
+        row.appendChild(imgWrapper);
+        //Track name
+        var span = document.createElement("span");
+        span.innerHTML = track.name;
+        row.appendChild(span);
+        //Track duration
+        var durationDiv = document.createElement("div");
+        durationDiv.classList.add("track_duration");
+        var date = new Date(); 
+        date.setTime((track.duration.h*3600 + track.duration.m*60 + track.duration.s) * 1000);
+        var strDuration = "";
+        if(track.duration.h != 0) 
+        { 
+            var strDuration = ('0' + date.getHours()).slice(-2) + ':';
+        }
+        strDuration +=  ('0' + (date.getMinutes()+1)).slice(-2) + ':' 
+                        + date.getSeconds();
+        durationDiv.innerHTML = strDuration;
+        row.appendChild(durationDiv)
+
+        return row;
+    } 
+ 
+    var divTitle = document.getElementById("playlistoverlay_title");
+    var divTracks = document.getElementById("playlistoverlay_tracks");
+    //Clear track div
+    divTitle.innerHTML = playlist.name;
+    divTracks.innerHTML = "";
+
+    //List all tracks
+    var tracks = playlist.tracks;
+    for (var i = 0; i < tracks.length; i++)
+    {
+        var track = tracks[i];
+        divTracks.appendChild(createTrackRow(track, i));
+    }
+}
+
+function showPlaylistOverlay() {
+    var overlay = document.getElementById("playlist_overlay");
+    overlay.classList.add("visible");
+}
+function hidePlaylistOverlay() {
+    var overlay = document.getElementById("playlist_overlay");
+    overlay.classList.remove("visible");
+}
+
 </script>
 
 </head>
@@ -438,6 +524,18 @@ function handleProgressClick(e) {
         <button id="overlay_close">Fertig</button>
     </div>
 
+</div>
+
+<div id="playlist_overlay">
+    <div id="closePlaylistOverlay">
+        <i class="material-icons">
+            arrow_back_ios
+        </i>
+    </div>
+    <div id="playlistoverlay_title"></div>
+    <div id="tracks_wrapper">
+        <div id="playlistoverlay_tracks"></div>
+    </div>
 </div>
 
 <div id="button_container">
