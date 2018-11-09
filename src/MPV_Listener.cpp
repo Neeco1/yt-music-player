@@ -36,6 +36,7 @@ void MPV_Listener::startListenerThread() {
             std::cerr << "Socket connection to mpv failed!" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
+        setSocketTimeout(5);
         //Send command to listen to playback time
         MPV_Listener::observeProperty("playback-time");
         while(!stopListener)
@@ -43,6 +44,13 @@ void MPV_Listener::startListenerThread() {
             handleData();
         }
     });
+}
+
+void MPV_Listener::setSocketTimeout(int seconds) {
+    struct timeval tv;
+    tv.tv_sec = seconds;
+    tv.tv_usec = 0;
+    setsockopt(sockDescriptor, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 }
 
 bool MPV_Listener::connectSocket() {
@@ -112,7 +120,13 @@ void MPV_Listener::handleEvent(std::string mpvEvt, Json::Value & fullJson) {
         //Playback time updated
         if(fullJson["name"].asString().compare("playback-time") == 0)
         {
-            unsigned int newTime = fullJson["data"].asUInt();
+            //Parse as int (because time from mpv is sometimes negative)
+            int time = fullJson["data"].asInt();
+            unsigned int newTime = 0;
+            if(time > 0)
+            {
+                newTime = fullJson["data"].asUInt();
+            }
             //Publish new event that playback time was updated
             PlaybackTimeUpdatedEvent e(*this, newTime);
             EventBus::FireEvent(e);

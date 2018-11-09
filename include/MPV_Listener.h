@@ -26,6 +26,7 @@ private:
     int sockDescriptor;
     bool socketConnected;
     
+    void setSocketTimeout(int seconds);
     std::string parseEventString(std::string evtStr, Json::Value & fullJson);
     void handleEvent(std::string event, Json::Value & fullJson);
 

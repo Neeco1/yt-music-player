@@ -20,6 +20,7 @@
 MusicPlayer::MusicPlayer()
 : currentPlaylist(nullptr),
   stopPressed(false), prevPressed(false), nextPressed(false),
+  newPlaylistSelected(false),
   currentPlaybackTime(0), playbackState(Stopped),
   playlistUpdater(new PlaylistUpdater(this))
 {
@@ -76,8 +77,13 @@ bool MusicPlayer::startPlayback() {
     
     return false;
 }
-
+//public
 bool MusicPlayer::stopPlayback() {
+    stopPressed = true;
+    return stop();
+}
+//private
+bool MusicPlayer::stop() {
     if(!currentPlaylist) { return false; }
     
     //First press: Stop actual playback
@@ -85,7 +91,6 @@ bool MusicPlayer::stopPlayback() {
     {
         MPV_Controller::sendCommandFromMap("cmdStopPlayback");
         playbackState = Stopped;
-        stopPressed = true;
         currentPlaylist->setPlaying(false);
         return true;
     }
@@ -96,7 +101,6 @@ bool MusicPlayer::stopPlayback() {
         currentPlaylist->setCurrentTrackNumber(0);
         currentPlaylist->setPlaying(false);
         playbackState = Stopped;
-        stopPressed = true;
         return true;
     }
     return false;
@@ -117,7 +121,7 @@ bool MusicPlayer::pausePlayback() {
 //public
 bool MusicPlayer::playNext() {
     nextPressed = true;
-    nextTrack();
+    return nextTrack();
 }
 //private
 bool MusicPlayer::nextTrack() {
@@ -136,7 +140,7 @@ bool MusicPlayer::nextTrack() {
 //public
 bool MusicPlayer::playPrevious() {
     prevPressed = true;
-    previousTrack();
+    return previousTrack();
 }
 //private
 bool MusicPlayer::previousTrack() {
@@ -246,8 +250,13 @@ const int MusicPlayer::getPlaylistCount() const {
 bool MusicPlayer::selectPlaylist(const std::string & playlist_id) {
     try
     {
+        //Stop playback if playing
+        if(playbackState == Playing)
+        {
+            newPlaylistSelected = true;
+            stop();
+        }
         auto playlistPtr = playlists.at(playlist_id);
-        stopPlayback();
         currentPlaylist = playlistPtr;
         currentPlaylist->setPlaying(true);
         return true;
@@ -300,11 +309,12 @@ void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
     if(!currentPlaylist) { return; }
     //Prevent playback of next track from this event immediately after user
     //pressed stop, previous or next
-    if(stopPressed || prevPressed || nextPressed)
+    if(stopPressed || prevPressed || nextPressed || newPlaylistSelected)
     {
         stopPressed = false;
         prevPressed = false;
         nextPressed = false;
+        newPlaylistSelected = false;
         return;
     }
     nextTrack();

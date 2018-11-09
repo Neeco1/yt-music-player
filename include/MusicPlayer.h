@@ -35,6 +35,8 @@ private:
     bool stopPressed;
     bool prevPressed;
     bool nextPressed;
+    //Same for playlist selection
+    bool newPlaylistSelected;
     
     unsigned int currentPlaybackTime;
     
@@ -43,6 +45,7 @@ private:
     
     PlaylistUpdater * playlistUpdater;
     
+    bool stop();
     bool nextTrack();
     bool previousTrack();
 
