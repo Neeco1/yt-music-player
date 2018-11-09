@@ -459,8 +459,7 @@ function loadPlaylistDataToOverlay(playlist) {
         { 
             var strDuration = ('0' + date.getHours()).slice(-2) + ':';
         }
-        strDuration +=  ('0' + (date.getMinutes()+1)).slice(-2) + ':' 
-                        + date.getSeconds();
+        strDuration +=  ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
         durationDiv.innerHTML = strDuration;
         row.appendChild(durationDiv)
 
