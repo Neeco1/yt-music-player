@@ -56,7 +56,7 @@ bool MPV_Listener::connectSocket() {
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, mpvSocketUrl.c_str(), sizeof(addr.sun_path)-1);
 
-    if (!connect(sockDescriptor, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+    if (connect(sockDescriptor, (struct sockaddr*)&addr, sizeof(addr)) == -1)
     {
         return false;
     }
