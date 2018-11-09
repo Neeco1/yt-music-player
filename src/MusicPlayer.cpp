@@ -114,6 +114,12 @@ bool MusicPlayer::pausePlayback() {
     }
     return false;
 }
+//public
+bool MusicPlayer::playNext() {
+    nextPressed = true;
+    nextTrack();
+}
+//private
 bool MusicPlayer::nextTrack() {
     if(!currentPlaylist) { return false; }
     
@@ -123,11 +129,16 @@ bool MusicPlayer::nextTrack() {
     auto nextTrack = currentPlaylist->nextTrack();
     if(!nextTrack) { return false; }
     MPV_Controller::playMedia(nextTrack->getUrl());
-    nextPressed = true;
     return true;
     //}
     //return false;
 }
+//public
+bool MusicPlayer::playPrevious() {
+    prevPressed = true;
+    previousTrack();
+}
+//private
 bool MusicPlayer::previousTrack() {
     if(!currentPlaylist) { return false; }
     
@@ -137,7 +148,6 @@ bool MusicPlayer::previousTrack() {
     auto prevTrack = currentPlaylist->previousTrack();
     if(!prevTrack) { return false; }
     MPV_Controller::playMedia(prevTrack->getUrl());
-    prevPressed = true;
     return true;
     //}
     //return false;
@@ -280,9 +290,9 @@ void MusicPlayer::onEvent(NewPlaylistReadyEvent & e) {
 
 void MusicPlayer::onEvent(FileStartPlayingEvent & e) {
     currentPlaybackTime = 0;
-    if(stopPressed) { stopPressed = false; }
-    if(prevPressed) { prevPressed = false; }
-    if(nextPressed) { nextPressed = false; }
+    stopPressed = false;
+    prevPressed = false;
+    nextPressed = false;
 }
 
 void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
@@ -297,7 +307,6 @@ void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
         nextPressed = false;
         return;
     }
-    
     nextTrack();
 }
 

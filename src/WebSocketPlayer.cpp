@@ -283,7 +283,7 @@ Json::Value WebSocketPlayer::pause() {
 
 Json::Value WebSocketPlayer::nextTrack() {
     Json::Value responseJson;
-    if(player.nextTrack())
+    if(player.playNext())
     {
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "next_track";
@@ -298,7 +298,7 @@ Json::Value WebSocketPlayer::nextTrack() {
 
 Json::Value WebSocketPlayer::previousTrack() {
     Json::Value responseJson;
-    if(player.previousTrack())
+    if(player.playPrevious())
     {
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "previous_track";

@@ -42,6 +42,9 @@ private:
     PlaybackMode playbackMode;
     
     PlaylistUpdater * playlistUpdater;
+    
+    bool nextTrack();
+    bool previousTrack();
 
 public:
     MusicPlayer();
@@ -55,8 +58,8 @@ public:
     bool startPlayback();
     bool stopPlayback();
     bool pausePlayback();
-    bool nextTrack();
-    bool previousTrack();
+    bool playNext();
+    bool playPrevious();
     bool playTrackFromCurrentListWithIndex(unsigned int index);
     bool setVolume(unsigned int vol);
     
