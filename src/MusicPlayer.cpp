@@ -87,7 +87,7 @@ bool MusicPlayer::stop() {
     if(!currentPlaylist) { return false; }
     
     //First press: Stop actual playback
-    if(playbackState == Playing)
+    if(playbackState == Playing || playbackState == Paused)
     {
         MPV_Controller::sendCommandFromMap("cmdStopPlayback");
         playbackState = Stopped;

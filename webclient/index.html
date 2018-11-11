@@ -72,25 +72,22 @@ function handlePlaybackInfo(jsonMsg) {
 
     document.getElementById("now_playing_title").innerHTML = info.title;
     document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
-    console.log("Duration: " + info.track_duration + ", played: " + info.track_playback_time);
+    //console.log("Duration: " + info.track_duration + ", played: " + info.track_playback_time);
 
     console.log(info.state);
     if(info.state === "playing" || info.state === "paused")
     {
         showNowPlaying();
+        document.getElementById("button_container").style.marginBottom = "60px";
         document.getElementById("btnStop").classList.remove("stateActive");
-        if(info.state === "paused")
-        {
+        
+        if(info.state === "paused") {
             document.getElementById("btnPlay").classList.remove("stateActive");
             document.getElementById("btnPause").classList.add("stateActive");
-        }
-        else
-        {
-            document.getElementById("button_container").style.marginBottom = "60px";
+        } else {
             document.getElementById("btnPlay").classList.add("stateActive");
             document.getElementById("btnPause").classList.remove("stateActive");
         }
-        
         var progressWidthPercent = (info.track_playback_time / info.track_duration) * 100;
         document.getElementById("progress_bar").style.width = progressWidthPercent+"%";
     }
