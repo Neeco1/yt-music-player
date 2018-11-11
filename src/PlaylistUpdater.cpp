@@ -15,20 +15,7 @@ bool PlaylistUpdater::startUpdate() {
     for(auto it = playlists.begin(); it != playlists.end(); ++it)
     {
         auto playlistShPtr = *it;
-        bool doUpdate = false;
-        try
-        {
-            updatesInProgress.at(playlistShPtr->getListId());
-            //In list, now check future state
-            //TODO
-            doUpdate = false;
-        }
-        catch(std::out_of_range e)
-        {
-            //Entry not found in map, so do update
-            doUpdate = true;
-        }
-        if(!doUpdate) { continue; }
+        if(isUpdateRunning(*it)) { continue; }
         
         //Push update task for the playlist on the thread pool
         threadPool->push([playlistShPtr](int id)
@@ -36,6 +23,23 @@ bool PlaylistUpdater::startUpdate() {
             //TODO Implement
         });
     }
+}
+
+bool PlaylistUpdater::isUpdateRunning(std::shared_ptr<Playlist> playlistShPtr) {
+    bool doUpdate = false;
+    try
+    {
+        UpdateEntry entry = std::move(updatesInProgress.at(playlistShPtr->getListId()));
+        //In list, now check future state
+        //if(entry.future)
+        doUpdate = false;
+    }
+    catch(std::out_of_range e)
+    {
+        //Entry not found in map, so do update
+        doUpdate = true;
+    }
+    return doUpdate;
 }
 
 void PlaylistUpdater::updateList() {

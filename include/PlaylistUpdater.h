@@ -5,6 +5,8 @@
 #include <future>
 #include <string>
 #include <map>
+#include <memory>
+#include "Playlist.h"
 
 typedef struct UpdateEntry {
     std::string playlist_id;
@@ -20,6 +22,8 @@ private:
     
     //Map for entries of playlists currently being updated
     std::map<std::string, UpdateEntry> updatesInProgress;
+
+    bool isUpdateRunning(std::shared_ptr<Playlist> playlistShPtr);
 
 public:
     PlaylistUpdater(MusicPlayer * player);
