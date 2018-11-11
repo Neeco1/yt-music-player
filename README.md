@@ -6,9 +6,9 @@ I started developing this project because I needed a simple and easy-to-use musi
 It works, but might still have a lot of bugs and the webclient is a quick-and-dirty one.
 
 Currently the player supports only youtube tracks and playlists. Feel free to add support for more services!
-
-<img src="./doc/img/img1.png" alt="Screenshot 1" height="400">
-<img src="./doc/img/img2.png" alt="Screenshot 2" height="400">
+<p align="center">
+<img src="./doc/img/img1.png" alt="Screenshot 1" height="500" />&nbsp;&nbsp;<img src="./doc/img/img2.png" alt="Screenshot 2" height="500"/>
+</p>
 
 ### Youtube Plugin:
 - Uses [`mpv` player](https://mpv.io) in socket mode (using `--input-ipc-server=/tmp/mpvsocket`)
