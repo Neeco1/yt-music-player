@@ -407,6 +407,10 @@ input[name=playlist_name] {
     vertical-align: middle;
     padding-right:10px;
 }
+.track_row.playing {
+    font-weight: bold;
+    background-color:rgba(180, 0, 0, 0.3);
+}
 
 @media screen and (min-width: 1000px) {
     #playlist_overlay {

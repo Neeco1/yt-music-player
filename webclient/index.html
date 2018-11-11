@@ -431,6 +431,9 @@ function loadPlaylistDataToOverlay(playlist) {
     function createTrackRow(track, trackIndex) {
         var row = document.createElement("div");
         row.classList.add("track_row");
+        if(track.id == playbackInfo.track_id) {
+            row.classList.add("playing");
+        }
         row.addEventListener("click", function() {
             playTrackFromList(playlist.id, trackIndex);
         });
