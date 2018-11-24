@@ -4,6 +4,10 @@ body {
     margin:0px;
 }
 
+.clear {
+    clear:both;
+}
+
 #topContent {
     position:fixed;
     top:0;
@@ -220,6 +224,7 @@ input[name=playlist_name] {
     /*white-space: nowrap;*/
     overflow: hidden !important;
     /*text-overflow: ellipsis;*/
+    user-select: none;
 }
 
 #progress_container {

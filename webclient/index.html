@@ -287,6 +287,13 @@ function initGui() {
     var progressContainer = document.getElementById("progress_container");
     progressContainer.addEventListener("click", handleProgressClick, true);
 
+    //playback info click handler
+    var playbackInfoContent = document.getElementById("playback_info_content");
+    playbackInfoContent.addEventListener("click", function() {
+        loadPlaylistDataToOverlay(playlists[currentPlaylistId]);
+        showPlaylistOverlay();
+    });
+
     //Add key listeners
     document.onkeydown = function(evt) {
         evt = evt || window.event;
@@ -553,8 +560,11 @@ function hidePlaylistOverlay() {
     <div id="progress_container">
         <div id="progress_bar"></div>
     </div>
-    <img id="now_playing_thumb" />
-    <div id="now_playing_title"></div>
+    <div id="playback_info_content">
+        <img id="now_playing_thumb" />
+        <div id="now_playing_title"></div>
+        <div class="clear"></div>
+    </div>
 </div>
 
 <div id="connection_lost" style="display:none;">
