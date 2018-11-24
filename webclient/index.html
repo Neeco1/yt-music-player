@@ -249,6 +249,24 @@ function initGui() {
     }
     overlayClose.addEventListener("click", closeOverlay);
 
+    //Design selection component
+    var titleDiv = document.getElementById("title");
+    var designSelector = document.getElementById("design_selector");
+    var flatBtn = document.getElementById("design_flat");
+    var roundBtn = document.getElementById("design_round");
+    var blocks = document.getElementsByClassName("playlist_block");
+    title.addEventListener("click", function() { designSelector.style.display="block"; });
+    flatBtn.addEventListener("click", function() {
+        Array.from(blocks).forEach(elm => { elm.classList.remove("block_round") });
+        designSelector.style.display="none";
+    });
+    roundBtn.addEventListener("click", function() {
+        Array.from(blocks).forEach(elm => {
+            if(!elm.classList.contains("block_round"))
+                elm.classList.add("block_round")
+        });
+        designSelector.style.display="none";
+    });
 
     //Volume slider component
     var volSlider = document.getElementById("volume_slider");
@@ -343,6 +361,7 @@ function createLoadingDom() {
 function playlistToDom(playlist, in_progress) {
     var blockDiv = document.createElement("div");
     blockDiv.setAttribute("class", "playlist_block");
+    
     if(playlist.playing)
     {
         currentPlaylistId = playlist.id;
@@ -503,7 +522,10 @@ function hidePlaylistOverlay() {
 <body>
 
 <div id="topContent">
-    <h1>WGay Music Player</h1>
+    <h1 id="title">Music Player</h1>
+    <div id="design_selector">
+        <span id="design_flat">&nbsp;</span> <span id="design_round">&nbsp;</span>
+    </div>
 
     0% <input type="range" min="60" max="100" value="<?php echo read_volume(); ?>" class="slider" id="volume_slider"> 100%
 </div>
