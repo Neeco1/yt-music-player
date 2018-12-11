@@ -73,7 +73,11 @@ unsigned int Playlist::getCurrentTrackNumber() {
 }
 
 std::shared_ptr<Track> Playlist::getCurrentTrack() {
-    return tracks[getCurrentTrackNumber()];
+    unsigned int trackNr = getCurrentTrackNumber();
+    if(tracks.size() == 0 || trackNr > tracks.size()) {
+        return nullptr;
+    }
+    return tracks[trackNr];
 }
 
 std::shared_ptr<Track> Playlist::nextTrack() {

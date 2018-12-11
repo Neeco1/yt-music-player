@@ -3,7 +3,7 @@ include_directories(${yt-music-player_SOURCE_DIR}/lib/)
 include_directories (/usr/local/include/)
 
 add_library(WebSocketPlayer WebSocketPlayer.cpp)
-add_library(MusicPlayer MusicPlayer.cpp Playlist.cpp)
+add_library(MusicPlayer MusicPlayer.cpp Playlist.cpp BasicPlaylist.cpp)
 add_library(Utils Utils.cpp)
 add_library(MPV_Classes MPV_Controller.cpp MPV_Listener.cpp)
 add_library(PlaylistUpdater PlaylistUpdater.cpp)

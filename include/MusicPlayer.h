@@ -26,6 +26,7 @@ typedef std::map<std::string, std::shared_ptr<Playlist>> PlaylistMap;
 private:
     PlaylistMap playlists;
     std::shared_ptr<Playlist> currentPlaylist;
+    std::shared_ptr<Playlist> defaultPlaylist;
     
     //Handler pointer for NewPlaylistReadyEvent
     std::vector<HandlerRegistration*> handlerRegs;
@@ -65,6 +66,8 @@ public:
     bool playPrevious();
     bool playTrackFromCurrentListWithIndex(unsigned int index);
     bool setVolume(unsigned int vol);
+
+    bool playMediaFromUrl(std::string & url);
     
     PlaybackInfo getPlaybackInfo();
     bool setPlaybackMode(PlaybackMode mode);

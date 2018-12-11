@@ -217,7 +217,22 @@ void WebSocketPlayer::initCommandEndpoint() {
                 responseJson["data"]["errorCode"] = "MALFORMED_REQUEST";
             }
         }
-        else if(command.compare("update_yt_dl"))
+        else if(command.compare("play_media_from_url") == 0)
+        {
+             /**
+             * Data format: { "url" : some_url }
+             */
+            if(data.isMember("url"))
+            {
+                responseJson = playMediaFromUrl(data["url"].asString());
+            }
+            else
+            {
+                responseJson["error"] = 1;
+                responseJson["data"]["errorCode"] = "MALFORMED_REQUEST";
+            }
+        }
+        else if(command.compare("update_yt_dl") == 0)
         {
             Utils::updateYoutubeDl();
             responseJson["error"] = 0;
@@ -450,6 +465,23 @@ Json::Value WebSocketPlayer::setPlaybackTime(std::string time) {
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "playback_time_set";
         responseJson["data"]["time"] = time;
+    }
+    else
+    {
+        responseJson["error"] = 1;
+        responseJson["data"]["status"] = "error";
+        responseJson["data"]["errorCode"] = "PLAYER_ERROR";
+    }
+    return responseJson;
+}
+
+Json::Value WebSocketPlayer::playMediaFromUrl(std::string url) {
+    Json::Value responseJson;
+    if(player.playMediaFromUrl(url))
+    {
+        responseJson["error"] = 0;
+        responseJson["data"]["status"] = "playback_started";
+        responseJson["data"]["url"] = url;
     }
     else
     {

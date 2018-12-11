@@ -54,6 +54,8 @@ public:
     Json::Value updatePlaylists();
     
     Json::Value setPlaybackTime(std::string time);
+
+    Json::Value playMediaFromUrl(std::string url);
     
     std::thread startThread();
     

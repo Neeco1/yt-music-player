@@ -9,6 +9,7 @@
 #include <array>
 #include <memory>
 #include <chrono>
+#include "BasicPlaylist.h"
 #include "youtube/YoutubeHandler.h"
 #include "youtube/YoutubePlaylist.h"
 #include "EventBus/HandlerRegistration.hpp"
@@ -32,6 +33,9 @@ MusicPlayer::MusicPlayer()
     handlerRegs.push_back(EventBus::AddHandler<FileEndPlayingEvent>(*this));
     handlerRegs.push_back(EventBus::AddHandler<FileStartPlayingEvent>(*this));
     handlerRegs.push_back(EventBus::AddHandler<PlaybackTimeUpdatedEvent>(*this));
+
+    defaultPlaylist = std::make_shared<BasicPlaylist>();
+    currentPlaylist = defaultPlaylist;
     
     MPV_Controller::startMPVIdle();
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -69,6 +73,9 @@ bool MusicPlayer::startPlayback() {
     if(playbackState == Stopped)
     {
         auto currentTrack = currentPlaylist->getCurrentTrack();
+        if(currentTrack == nullptr) {
+            return false;
+        }
         currentPlaylist->setPlaying(true);
         MPV_Controller::playMedia(currentTrack->getUrl());
         playbackState = Playing;
@@ -174,23 +181,39 @@ bool MusicPlayer::setVolume(unsigned int volume) {
     return true;
 }
 
+bool MusicPlayer::playMediaFromUrl(std::string & url) {
+    stop();
+    stop();
+    auto newTrack = std::make_shared<Track>(url);
+    newTrack->setName(url);
+    newTrack->setUrl(url);
+    defaultPlaylist->addTrack(newTrack);
+    currentPlaylist = defaultPlaylist;
+    currentPlaylist->setPlaying(true);
+    MPV_Controller::playMedia(url);
+    playbackState = Playing;
+    return true;
+}
+
 PlaybackInfo MusicPlayer::getPlaybackInfo() {
     PlaybackInfo info;
     if(!currentPlaylist) { return info; }
     
     //Build playback info object
-    auto track = currentPlaylist->getCurrentTrack();
     if(playbackState == Paused) { info.state = "paused"; }
     else if(playbackState == Playing) { info.state = "playing"; }
     else if(playbackState == Stopped) { info.state = "stopped"; }
-    
-    info.title = track->getName();
-    info.trackId = track->getTrackId();
-    info.playbackTime = currentPlaybackTime;
-    info.duration = track->getDurationSeconds();
-    info.playbackMode = Normal;
-    info.thumbUrl = track->getThumbUrl();
-    
+
+    auto track = currentPlaylist->getCurrentTrack();
+    if(track != nullptr) 
+    {
+        info.title = track->getName();
+        info.trackId = track->getTrackId();
+        info.playbackTime = currentPlaybackTime;
+        info.duration = track->getDurationSeconds();
+        info.playbackMode = Normal;
+        info.thumbUrl = track->getThumbUrl();
+    }    
     return info;
 }
 
