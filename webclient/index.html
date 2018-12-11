@@ -8,12 +8,10 @@
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
 
-<script
-  src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-  integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
-  crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <script src="./reconnecting-websocket.min.js"></script>
+<script src="./yt_search.js"></script>
 
 <script type="text/javascript">
 function getRandomColor() {
@@ -33,6 +31,8 @@ var playbackStateInterval;
 var playlists;
 var currentPlaylistId;
 var playbackInfo;
+
+var globalSearchTimer;
 
 function setupWebsocketConnection() {
     wsConn = new ReconnectingWebSocket('ws://'+window.location.hostname+':8080/action');
@@ -249,6 +249,32 @@ function initGui() {
     }
     overlayClose.addEventListener("click", closeOverlay);
 
+    //Search button + overlay
+    var searchBtn = document.getElementById("search_btn");
+    searchBtn.addEventListener("click", function() {
+        if(document.getElementById("search_overlay").classList.contains("visible"))
+        {
+            hideOverlay("search_overlay");
+            return;
+        }
+        showOverlay("search_overlay");
+    });
+    var closeSearchOverlay = document.getElementById("closeSearchOverlay");
+    closeSearchOverlay.addEventListener("click", function() {
+        hideOverlay("search_overlay");
+    });
+    var searchText = document.getElementById("search_text");
+    searchText.addEventListener("keyup", function(e) {
+        globalSearchTimer = setTimeout(yt_search, 500);
+        if(e.key == "Enter") {
+            document.activeElement.blur();
+        }
+    });
+    searchText.addEventListener("keydown", function() {
+        if(globalSearchTimer)
+            clearTimeout(globalSearchTimer)
+    });
+
     //Design selection component
     var titleDiv = document.getElementById("title");
     var designSelector = document.getElementById("design_selector");
@@ -298,7 +324,7 @@ function initGui() {
     //Playlist overlay component
     var closePlaylistOverlay = document.getElementById("closePlaylistOverlay");
     closePlaylistOverlay.addEventListener("click", function() {
-        hidePlaylistOverlay();
+        hideOverlay("playlist_overlay");
     });
 
     //Progress bar event handlers
@@ -309,7 +335,7 @@ function initGui() {
     var playbackInfoContent = document.getElementById("playback_info_content");
     playbackInfoContent.addEventListener("click", function() {
         loadPlaylistDataToOverlay(playlists[currentPlaylistId]);
-        showPlaylistOverlay();
+        showOverlay("playlist_overlay");
     });
 
     //Add key listeners
@@ -322,7 +348,7 @@ function initGui() {
             isEscape = (evt.keyCode == 27);
         }
         if (isEscape) {
-            hidePlaylistOverlay();
+            hideOverlay("playlist_overlay");
         }
     };
 }
@@ -340,6 +366,7 @@ window.onload = function() {
 
     blockContainer = document.getElementById("block_container");
     initGui();
+    yt_init();
 }
 
 function createLoadingDom() {
@@ -382,7 +409,7 @@ function playlistToDom(playlist, in_progress) {
     link.setAttribute("href", "#");
     link.addEventListener("click", function() {
         loadPlaylistDataToOverlay(playlist);
-        showPlaylistOverlay();
+        showOverlay("playlist_overlay");
     });
     var span = document.createElement("span");
     span.innerHTML = playlist.name;
@@ -507,12 +534,12 @@ function loadPlaylistDataToOverlay(playlist) {
     }
 }
 
-function showPlaylistOverlay() {
-    var overlay = document.getElementById("playlist_overlay");
+function showOverlay(css_id) {
+    var overlay = document.getElementById(css_id);
     overlay.classList.add("visible");
 }
-function hidePlaylistOverlay() {
-    var overlay = document.getElementById("playlist_overlay");
+function hideOverlay(css_id) {
+    var overlay = document.getElementById(css_id);
     overlay.classList.remove("visible");
 }
 
@@ -522,7 +549,12 @@ function hidePlaylistOverlay() {
 <body>
 
 <div id="topContent">
-    <h1 id="title">Music Player</h1>
+    <div id="top_line">
+        <div id="search_btn">
+            <i class="material-icons">search</i>
+        </div>
+        <h1 id="title">Music Player</h1>
+    </div>
     <div id="design_selector">
         <span id="design_flat">&nbsp;</span> <span id="design_round">&nbsp;</span>
     </div>
@@ -554,16 +586,31 @@ function hidePlaylistOverlay() {
 
 </div>
 
-<div id="playlist_overlay">
-    <div id="closePlaylistOverlay">
+<div id="playlist_overlay" class="shy_overlay">
+    <div id="closePlaylistOverlay" class="btnCloseOverlay">
         <i class="material-icons">
             arrow_back_ios
         </i>
     </div>
-    <div id="playlistoverlay_title"></div>
-    <div id="tracks_wrapper">
+    <div id="playlistoverlay_title" class="overlay_title"></div>
+    <div id="tracks_wrapper" class="overlay_content">
         <div id="playlistoverlay_tracks"></div>
     </div>
+</div>
+
+<div id="search_overlay" class="shy_overlay">
+        <div id="closeSearchOverlay" class="btnCloseOverlay">
+            <i class="material-icons">arrow_back_ios</i>
+        </div>
+        <div id="search_overlay_title" class="overlay_title">Search</div>
+        <div id="search_overlay_input" class="overlay_subtitle">
+            <input type="text" name="search_text" id="search_text" />
+        </div>
+        <div id="search_overlay_buttons" class="overlay_subtitle"></div>
+        <div id="search_overlay_content" class="overlay_content">
+            <ul id="search_overlay_results"></ul>
+            <div> &nbsp; </div>
+        </div>
 </div>
 
 <div id="button_container">
