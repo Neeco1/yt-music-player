@@ -99,12 +99,14 @@ function yt_getOutput(item) {
     var channelTitle = item.snippet.channelTitle;
     var videoDate = item.snippet.publishedAt;
     
+    var url = "https://youtube.com/watch?v="+videoID
+
     var output = 	'<li>' +
         				'<div class="list-left">' +
         					'<img src="' + thumb + '">' +
         				'</div>' +
-        				'<div class="list-right">' +
-        					'<h3><a href="https://youtube.com/embed/' + videoID + '?rel=0">' + title + '</a></h3>' +
+        				'<div class="list-right" onclick="playMediaFromURL(\''+url+'\')">' +
+        					'<h3><a>' + title + '</a></h3>' +
         					'<small>By <span class="cTitle">' + channelTitle + '</span> on ' + videoDate + '</small>' +
         					'<p>' + description + '</p>' +
         				'</div>' +

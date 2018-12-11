@@ -67,14 +67,15 @@ function handleWsClose(e) {
 }
 
 function handlePlaybackInfo(jsonMsg) {
+    console.log(jsonMsg);
     var info = jsonMsg.data.playback_info;
     playbackInfo = info; //Update global playback info
 
     document.getElementById("now_playing_title").innerHTML = info.title;
     document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
     //console.log("Duration: " + info.track_duration + ", played: " + info.track_playback_time);
-
-    console.log(info.state);
+    //console.log(info.state);
+    
     if(info.state === "playing" || info.state === "paused")
     {
         showNowPlaying();
@@ -435,6 +436,9 @@ function playList(list_id) {
 
 function playTrackFromList(playlist_id, track_index) {
     wsConn.send('{ "cmd" : "play_track_from_list", "data" : {"playlist_id" : "'+playlist_id+'", "track_index" : '+track_index+' } }');
+}
+function playMediaFromURL(url) {
+    wsConn.send('{ "cmd" : "play_media_from_url", "data" : {"url" : "'+url+'"} }');
 }
 
 function startPlaying() {
