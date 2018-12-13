@@ -182,8 +182,8 @@ bool MusicPlayer::setVolume(unsigned int volume) {
 }
 
 bool MusicPlayer::playMediaFromUrl(std::string & url) {
-    stop();
-    stop();
+    stopPlayback();
+    stopPlayback();
     auto newTrack = std::make_shared<Track>(url);
     newTrack->setName(url);
     newTrack->setUrl(url);
