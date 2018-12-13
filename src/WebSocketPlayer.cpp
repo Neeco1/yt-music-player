@@ -17,6 +17,7 @@ WebSocketPlayer::WebSocketPlayer(int port)
     handlerRegs.push_back(EventBus::AddHandler<NewPlaylistReadyEvent>(*this));
     handlerRegs.push_back(EventBus::AddHandler<NewPlaylistFetchFailedEvent>(*this));
     handlerRegs.push_back(EventBus::AddHandler<PlaylistFetchStartEvent>(*this));
+    handlerRegs.push_back(EventBus::AddHandler<FileStartPlayingEvent>(*this));
 }
 
 WebSocketPlayer::~WebSocketPlayer() {
@@ -46,6 +47,19 @@ std::thread WebSocketPlayer::startThread() {
 }
 
 void WebSocketPlayer::initCommandEndpoint() {
+    commandEndpoint.on_open = [this](ConnectionPtr connection)
+    {
+        auto pbState = player.getPlaybackState();
+        if(pbState == Playing || pbState == Paused) 
+        {
+            Json::Value responseJson;
+            responseJson["error"] = 0;
+            responseJson["data"]["status"] = "playback_started";
+            std::string responseStr = Utils::jsonToString(responseJson);
+            connection->send(responseStr, [](const SimpleWeb::error_code &ec) { });
+        }
+    };
+
     commandEndpoint.on_message = [this](ConnectionPtr connection, InMessagePtr in_message)
     {
         //Try to parse data
@@ -528,4 +542,11 @@ void WebSocketPlayer::onEvent(PlaylistFetchStartEvent & e) {
     responseJson["data"]["playlist_id"] = e.getPlaylistId();
     responseJson["data"]["playlist_name"] = e.getPlaylistName();
     sendToAll(responseJson);
+}
+
+void WebSocketPlayer::onEvent(FileStartPlayingEvent & e) {
+    Json::Value msgJson;
+    msgJson["error"] = 0;
+    msgJson["data"]["status"] = "playback_started";
+    sendToAll(msgJson);
 }

@@ -195,7 +195,7 @@ bool MusicPlayer::playMediaFromUrl(std::string & url) {
     return true;
 }
 
-PlaybackInfo MusicPlayer::getPlaybackInfo() {
+PlaybackInfo MusicPlayer::getPlaybackInfo() const {
     PlaybackInfo info;
     if(!currentPlaylist) { return info; }
     
@@ -215,6 +215,10 @@ PlaybackInfo MusicPlayer::getPlaybackInfo() {
         info.thumbUrl = track->getThumbUrl();
     }    
     return info;
+}
+
+PlaybackState MusicPlayer::getPlaybackState() const {
+    return playbackState;
 }
 
 bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {

@@ -69,7 +69,8 @@ public:
 
     bool playMediaFromUrl(std::string & url);
     
-    PlaybackInfo getPlaybackInfo();
+    PlaybackInfo getPlaybackInfo() const;
+    PlaybackState getPlaybackState() const;
     bool setPlaybackMode(PlaybackMode mode);
     
     bool addPlaylist(const std::shared_ptr<Playlist> playlist);

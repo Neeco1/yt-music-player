@@ -12,13 +12,15 @@
 #include "events/NewPlaylistReadyEvent.h"
 #include "events/NewPlaylistFetchFailedEvent.h"
 #include "events/PlaylistFetchStartEvent.h"
+#include "events/FileStartPlayingEvent.h"
 
 using WsServer = SimpleWeb::SocketServer<SimpleWeb::WS>;
 using WsEndpoint = SimpleWeb::SocketServer<SimpleWeb::WS>::Endpoint;
 
 class WebSocketPlayer : public EventHandler<NewPlaylistReadyEvent>,
                         public EventHandler<NewPlaylistFetchFailedEvent>,
-                        public EventHandler<PlaylistFetchStartEvent>
+                        public EventHandler<PlaylistFetchStartEvent>, 
+                        public EventHandler<FileStartPlayingEvent>
 {
 private:
     int port;
@@ -64,6 +66,7 @@ public:
     virtual void onEvent(NewPlaylistReadyEvent & e) override;
     virtual void onEvent(NewPlaylistFetchFailedEvent & e) override;
     virtual void onEvent(PlaylistFetchStartEvent & e) override;
+    virtual void onEvent(FileStartPlayingEvent & e) override;
     
 };
 

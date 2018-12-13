@@ -10,8 +10,8 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-<script src="./reconnecting-websocket.min.js"></script>
-<script src="./yt_search.js"></script>
+<script type="text/javascript" src="./reconnecting-websocket.min.js"></script>
+<script type="text/javascript" src="./yt_search.js"></script>
 
 <script type="text/javascript">
 function getRandomColor() {
@@ -24,6 +24,8 @@ function getRandomColor() {
 }
 </script>
 
+<script type="text/javascript" src="./gui.js"></script>
+
 <script type="text/javascript">
 var wsConn;
 var reconnectInterval;
@@ -33,6 +35,14 @@ var currentPlaylistId;
 var playbackInfo;
 
 var globalSearchTimer;
+
+window.onload = function() {
+    setupWebsocketConnection();
+
+    blockContainer = document.getElementById("block_container");
+    gui_init();
+    yt_init();
+}
 
 function setupWebsocketConnection() {
     wsConn = new ReconnectingWebSocket('ws://'+window.location.hostname+':8080/action');
@@ -62,7 +72,7 @@ function handleWsError(error) {
 
 function handleWsClose(e) {
     window.clearInterval(playbackStateInterval);
-    hideNowPlaying();
+    gui_hideNowPlaying();
     document.getElementById("connection_lost").style.display="block";
 }
 
@@ -78,7 +88,6 @@ function handlePlaybackInfo(jsonMsg) {
     
     if(info.state === "playing" || info.state === "paused")
     {
-        showNowPlaying();
         document.getElementById("button_container").style.marginBottom = "60px";
         document.getElementById("btnStop").classList.remove("stateActive");
         
@@ -94,7 +103,6 @@ function handlePlaybackInfo(jsonMsg) {
     }
     else
     {
-        hideNowPlaying();
         document.getElementById("btnPause").classList.remove("stateActive");
         document.getElementById("btnStop").classList.add("stateActive");
         document.getElementById("btnPlay").classList.remove("stateActive");
@@ -124,308 +132,76 @@ function handleWsMessage(e) {
         return;
     }
     //Handle data
-    if(jsonMsg.data.status === "playlists")
+    switch(jsonMsg.data.status)
     {
-        playlists = jsonMsg.data.playlists;
-        showPlaylists();
-    }
-    if(jsonMsg.data.status === "playlist_add_in_progress")
-    {
-        var playlist = jsonMsg.data;
-        blockContainer.appendChild(playlistToDom(playlist, true));
-        return;
-    }
-    if(jsonMsg.data.status === "playlist_add_done")
-    {
-        var playlist = jsonMsg.data.playlist;
-        var playlistDiv = document.getElementById("playlist"+playlist.id);
-        //Check if "loading playlist block" is found
-        if(playlistDiv)
-        {
-            var overlayToRemove = playlistDiv.getElementsByClassName("progress_overlay")[0];
-            playlistDiv.removeChild(overlayToRemove);
-        }
-        else
-        {
-            //Not found, so create new one
-            blockContainer.appendChild(playlistToDom(playlist, false));
-        }
+        case "playlists":
+            playlists = jsonMsg.data.playlists;
+            gui_showPlaylists();
+        break;
 
-        return;
-    }
-    //Gets published when a playlist is being updated
-    if(jsonMsg.data.status === "playlist_fetch_start")
-    {
-        var playlist_id = jsonMsg.data.playlist_id;
-        var playlist_name = jsonMsg.data.playlist_name;
-        var playlistDiv = document.getElementById("playlist"+playlist_id);
-        //Check if playlist block is there
-        if(playlistDiv)
-        {
-            //Show loading overlay
-            var overlayToRemove = playlistDiv.getElementsByClassName("progress_overlay")[0];
-            if(!overlayToRemove)
+        case "playlist_add_in_progress":
+            var playlist = jsonMsg.data;
+            blockContainer.appendChild(playlistToDom(playlist, true));
+            return;   
+        
+        case "playlist_add_done":
+            var playlist = jsonMsg.data.playlist;
+            var playlistDiv = document.getElementById("playlist"+playlist.id);
+            //Check if "loading playlist block" is found
+            if(playlistDiv)
             {
-                playlistDiv.prepend(createLoadingDom());
+                var overlayToRemove = playlistDiv.getElementsByClassName("progress_overlay")[0];
+                playlistDiv.removeChild(overlayToRemove);
             }
-        }
-    }
-    if(jsonMsg.data.status === "playlist_selected")
-    {
-        var listId = jsonMsg.data.playlist_id;
-        try
-        {
-            document.getElementById("playlist"+currentPlaylistId).classList.remove("now_playing");
-        } 
-        catch(e) {} //Catch, if nothing is selected
-        currentPlaylistId = listId;
-        document.getElementById("playlist"+listId).classList.add("now_playing");
-        return;
-    }
-    if(jsonMsg.data.status === "playback_info")
-    {
-        handlePlaybackInfo(jsonMsg);
-        return;
-    }
-    if(jsonMsg.data.status === "playback_started")
-    {
-        document.getElementById("button_container").style.marginBottom = "60px";
-        document.getElementById("btnPause").classList.remove("stateActive");
-        document.getElementById("btnStop").classList.remove("stateActive");
-        document.getElementById("btnPlay").classList.add("stateActive");
-    }
-    if(jsonMsg.data.status === "playback_stopped")
-    {
-        try
-        {
-            document.getElementById("button_container").style.marginBottom = "0px";
-            document.getElementById("btnPause").classList.remove("stateActive");
-            document.getElementById("btnStop").classList.add("stateActive");
-            document.getElementById("btnPlay").classList.remove("stateActive");
-            document.getElementById("playlist"+currentPlaylistId).classList.remove("now_playing");
-            return
-        }
-        catch(e) {}
-        return;
-    }
-    if(jsonMsg.data.status === "playback_paused")
-    {
-        document.getElementById("btnPause").classList.add("stateActive");
-        document.getElementById("btnStop").classList.remove("stateActive");
-        document.getElementById("btnPlay").classList.remove("stateActive");
-    }
-}
-
-function showNotification(message) {
-    //TODO
-}
-
-function initGui() {
-    var playlistNameInput = document.getElementById("playlist_name");
-    var playlistUrlInput = document.getElementById("playlist_url");
-
-    var circleDiv = document.getElementById("circle");
-    circleDiv.addEventListener("touchstart", function()
-    {
-        circleDiv.style.backgroundColor = "#CCA83B";
-    });
-    circleDiv.addEventListener("mousedown", function()
-    {
-        circleDiv.style.backgroundColor = "#CCA83B";
-    });
-    circleDiv.addEventListener("mouseup", function()
-    {
-        circleDiv.style.backgroundColor = "#FFB035";
-    });
-    circleDiv.addEventListener("click", function() {
-        overlay.style.display="block";
-    });
-
-    var overlayClose = document.getElementById("overlay_close");
-    var overlay = document.getElementById("overlay");
-    function closeOverlay() {
-        overlay.style.display = "none";
-        playlistNameInput.value = "";
-        playlistUrlInput.value = "";
-    }
-    overlayClose.addEventListener("click", closeOverlay);
-
-    //Search button + overlay
-    var searchBtn = document.getElementById("search_btn");
-    searchBtn.addEventListener("click", function() {
-        if(document.getElementById("search_overlay").classList.contains("visible"))
-        {
-            hideOverlay("search_overlay");
+            else
+            {
+                //Not found, so create new one
+                blockContainer.appendChild(playlistToDom(playlist, false));
+            }
             return;
-        }
-        showOverlay("search_overlay");
-    });
-    var closeSearchOverlay = document.getElementById("closeSearchOverlay");
-    closeSearchOverlay.addEventListener("click", function() {
-        hideOverlay("search_overlay");
-    });
-    var searchText = document.getElementById("search_text");
-    searchText.addEventListener("keyup", function(e) {
-        globalSearchTimer = setTimeout(yt_search, 500);
-        if(e.key == "Enter") {
-            document.activeElement.blur();
-        }
-    });
-    searchText.addEventListener("keydown", function() {
-        if(globalSearchTimer)
-            clearTimeout(globalSearchTimer)
-    });
 
-    //Design selection component
-    var titleDiv = document.getElementById("title");
-    var designSelector = document.getElementById("design_selector");
-    var flatBtn = document.getElementById("design_flat");
-    var roundBtn = document.getElementById("design_round");
-    var blocks = document.getElementsByClassName("playlist_block");
-    title.addEventListener("click", function() { designSelector.style.display="block"; });
-    flatBtn.addEventListener("click", function() {
-        Array.from(blocks).forEach(elm => { elm.classList.remove("block_round") });
-        designSelector.style.display="none";
-    });
-    roundBtn.addEventListener("click", function() {
-        Array.from(blocks).forEach(elm => {
-            if(!elm.classList.contains("block_round"))
-                elm.classList.add("block_round")
-        });
-        designSelector.style.display="none";
-    });
+        case "playlist_fetch_start": //Gets published when a playlist is being updated
+            var playlist_id = jsonMsg.data.playlist_id;
+            var playlist_name = jsonMsg.data.playlist_name;
+            var playlistDiv = document.getElementById("playlist"+playlist_id);
+            //Check if playlist block is there
+            if(playlistDiv)
+            {
+                //Show loading overlay
+                var overlayToRemove = playlistDiv.getElementsByClassName("progress_overlay")[0];
+                if(!overlayToRemove)
+                {
+                    playlistDiv.prepend(gui_createLoadingDom());
+                }
+            }
+        break;
 
-    //Volume slider component
-    var volSlider = document.getElementById("volume_slider");
-    var volSliderFunction = function() {
-        wsConn.send('{ "cmd" : "set_volume", "data" : {"volume":'+volSlider.value+'} }');
-    }
-    volSlider.addEventListener("touchend", volSliderFunction);
-    volSlider.addEventListener("mouseup", volSliderFunction);
+        case "playlist_selected":
+            var listId = jsonMsg.data.playlist_id;
+            try
+            {
+                gui_updateNowPlaying(currentPlaylistId, false);
+            } 
+            catch(e) {} //Catch, if nothing is selected
+            currentPlaylistId = listId;
+            gui_updateNowPlaying(currentPlaylistId, true);
+            return;
 
-    //Overlay button component
-    var newPlaySendBtn = document.getElementById("sendform_button");
-    var newPlayForm = document.getElementById("newPlayForm");
-    var sendPlaylistURL = function() {
-        newPlaySendBtn.setAttribute("disabled", "disabled");
-        var playlistUrl = playlistUrlInput.value.trim();
-        var playlistName = playlistNameInput.value.trim();
-        wsConn.send('{ "cmd" : "add_playlist", '
-            + '"data" : {"playlist_url":"'+playlistUrl+'", "name":"'+playlistName+'"} }');
-        closeOverlay();
-        newPlaySendBtn.removeAttribute("disabled");
-    }
-    newPlayForm.addEventListener("submit", function(e) {
-        sendPlaylistURL();
-        e.preventDefault();
-        return false;
-    });
-    newPlaySendBtn.removeAttribute("disabled");
+        case "playback_info":
+            handlePlaybackInfo(jsonMsg);
+            return;
 
-    //Playlist overlay component
-    var closePlaylistOverlay = document.getElementById("closePlaylistOverlay");
-    closePlaylistOverlay.addEventListener("click", function() {
-        hideOverlay("playlist_overlay");
-    });
+        case "playback_started":
+            gui_updatePlaybackStarted();
+        break;
 
-    //Progress bar event handlers
-    var progressContainer = document.getElementById("progress_container");
-    progressContainer.addEventListener("click", handleProgressClick, true);
+        case "playback_stopped":
+            gui_updatePlaybackStopped();
+        break;
 
-    //playback info click handler
-    var playbackInfoContent = document.getElementById("playback_info_content");
-    playbackInfoContent.addEventListener("click", function() {
-        loadPlaylistDataToOverlay(playlists[currentPlaylistId]);
-        showOverlay("playlist_overlay");
-    });
-
-    //Add key listeners
-    document.onkeydown = function(evt) {
-        evt = evt || window.event;
-        var isEscape = false;
-        if ("key" in evt) {
-            isEscape = (evt.key == "Escape" || evt.key == "Esc");
-        } else {
-            isEscape = (evt.keyCode == 27);
-        }
-        if (isEscape) {
-            hideOverlay("playlist_overlay");
-        }
-    };
-}
-
-function showNowPlaying() {
-    document.getElementById("playback_info").style.marginBottom="0px";
-}
-function hideNowPlaying() {
-    document.getElementById("button_container").style.marginBottom = "0px";
-    document.getElementById("playback_info").style.marginBottom="-60px";
-}
-
-window.onload = function() {
-    setupWebsocketConnection();
-
-    blockContainer = document.getElementById("block_container");
-    initGui();
-    yt_init();
-}
-
-function createLoadingDom() {
-    var progressDiv = document.createElement("div");
-    progressDiv.setAttribute("class", "progress_overlay");
-    var loaderDiv1 = document.createElement("div");
-    loaderDiv1.classList.add("lds-css");
-    loaderDiv1.classList.add("ng-scope");
-    var loaderDiv2 = document.createElement("div");
-    loaderDiv2.style.width = "60px";
-    loaderDiv2.style.height = "60px";
-    loaderDiv2.classList.add("lds-eclipse");
-    loaderDiv2.appendChild(document.createElement("div"));
-    loaderDiv1.appendChild(loaderDiv2);
-    progressDiv.appendChild(loaderDiv1);
-    return progressDiv;
-}
-
-function playlistToDom(playlist, in_progress) {
-    var blockDiv = document.createElement("div");
-    blockDiv.setAttribute("class", "playlist_block");
-    
-    if(playlist.playing)
-    {
-        currentPlaylistId = playlist.id;
-        blockDiv.classList.add("now_playing");
-    }
-    blockDiv.setAttribute("id", "playlist"+playlist.id);
-    blockDiv.style.backgroundColor = getRandomColor();
-
-    if(in_progress) {
-        var progressDiv = createLoadingDom();
-        blockDiv.appendChild(progressDiv);
-    }
-
-    var subDiv = document.createElement("div");
-    subDiv.setAttribute("class", "block_content");
-    var link = document.createElement("a");
-    link.setAttribute("class", "title");
-    link.setAttribute("href", "#");
-    link.addEventListener("click", function() {
-        loadPlaylistDataToOverlay(playlist);
-        showOverlay("playlist_overlay");
-    });
-    var span = document.createElement("span");
-    span.innerHTML = playlist.name;
-    link.appendChild(span);
-    subDiv.appendChild(link);
-    blockDiv.appendChild(subDiv);
-
-    return blockDiv;
-}
-
-function showPlaylists() {
-    blockContainer.innerHTML = "";
-    for (var list_id in playlists)
-    {
-        blockContainer.appendChild(playlistToDom(playlists[list_id], false));
+        case "playback_paused":
+            gui_updateButtons(false, false, false, true, false);
+        break;
     }
 }
 
@@ -443,11 +219,11 @@ function playMediaFromURL(url) {
 
 function startPlaying() {
     wsConn.send('{ "cmd" : "play", "data" : {}}');
-    showNowPlaying();
+    gui_showNowPlaying();
 }
 function stopPlaying() {
     wsConn.send('{ "cmd" : "stop", "data" : {}}');
-    hideNowPlaying();
+    gui_hideNowPlaying();
 }
 function pausePlaying() {
     wsConn.send('{ "cmd" : "pause", "data" : {}}');
@@ -461,19 +237,6 @@ function previousTrack() {
     wsConn.send('{ "cmd" : "previousTrack", "data" : {}}');
 }
 
-function setPlaybackMode(mode) {
-    if(mode === "repeat") 
-    {
-        document.getElementById("btnRepeat").classList.remove("hidden");
-        document.getElementById("btnShuffle").classList.add("visible");
-    }
-    if(mode === "shuffle") 
-    {
-        document.getElementById("btnRepeat").classList.add("hidden");
-        document.getElementById("btnShuffle").classList.remove("visible");
-    }
-}
-
 function handleProgressClick(e) {
     if(playbackInfo.track_duration == undefined || playbackInfo.track_duration == 0) { return; }
 
@@ -484,74 +247,10 @@ function handleProgressClick(e) {
     wsConn.send('{ "cmd" : "setPlaybackTime", "data" : {"time" : "' + newTime + '"} }');
 }
 
-function loadPlaylistDataToOverlay(playlist) {
-    function createTrackRow(track, trackIndex) {
-        var row = document.createElement("div");
-        row.classList.add("track_row");
-        if(track.id == playbackInfo.track_id) {
-            row.classList.add("playing");
-        }
-        row.addEventListener("click", function() {
-            playTrackFromList(playlist.id, trackIndex);
-        });
-
-        //Track image
-        var imgWrapper = document.createElement("div");
-        imgWrapper.classList.add("img_wrapper");
-        var img = document.createElement("img");
-        img.setAttribute("src", track.thumbUrl);
-        imgWrapper.appendChild(img)
-        row.appendChild(imgWrapper);
-        //Track name
-        var span = document.createElement("span");
-        span.innerHTML = track.name;
-        row.appendChild(span);
-        //Track duration
-        var durationDiv = document.createElement("div");
-        durationDiv.classList.add("track_duration");
-        var date = new Date(); 
-        date.setTime((track.duration.h*3600 + track.duration.m*60 + track.duration.s) * 1000);
-        var strDuration = "";
-        if(track.duration.h != 0) 
-        { 
-            var strDuration = ('0' + date.getHours()).slice(-2) + ':';
-        }
-        strDuration +=  ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
-        durationDiv.innerHTML = strDuration;
-        row.appendChild(durationDiv)
-
-        return row;
-    } 
- 
-    var divTitle = document.getElementById("playlistoverlay_title");
-    var divTracks = document.getElementById("playlistoverlay_tracks");
-    //Clear track div
-    divTitle.innerHTML = playlist.name;
-    divTracks.innerHTML = "";
-
-    //List all tracks
-    var tracks = playlist.tracks;
-    for (var i = 0; i < tracks.length; i++)
-    {
-        var track = tracks[i];
-        divTracks.appendChild(createTrackRow(track, i));
-    }
-}
-
-function showOverlay(css_id) {
-    var overlay = document.getElementById(css_id);
-    overlay.classList.add("visible");
-}
-function hideOverlay(css_id) {
-    var overlay = document.getElementById(css_id);
-    overlay.classList.remove("visible");
-}
-
 </script>
 
 </head>
 <body>
-
 <div id="topContent">
     <div id="top_line">
         <div id="search_btn">
@@ -568,6 +267,7 @@ function hideOverlay(css_id) {
 
 <div id="block_container">
 </div>
+
 <div id="add_button">
     <div id="circle">
         <span>+</span>
@@ -624,8 +324,8 @@ function hideOverlay(css_id) {
     <i id="btnPause" onclick="pausePlaying()" class="material-icons">pause_circle_outline</i></a>
     <i id="btnNext" onclick="nextTrack()" class="material-icons">skip_next</i></a>
     <div id="playback_mode_area">
-        <i id="btnRepeat" onclick="setPlaybackMode('repeat')" class="material-icons hidden">repeat</i>
-        <i id="btnShuffle" onclick="setPlaybackMode('shuffle')"class="material-icons">shuffle</i>
+        <i id="btnRepeat" onclick="gui_setPlaybackMode('repeat')" class="material-icons hidden">repeat</i>
+        <i id="btnShuffle" onclick="gui_setPlaybackMode('shuffle')"class="material-icons">shuffle</i>
     </div>
 </div>
 

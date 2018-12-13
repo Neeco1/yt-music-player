@@ -7,6 +7,7 @@
 #include <iostream>
 #include "jsoncpp/json/json.h"
 #include "EventBus/EventBus.hpp"
+#include "events/FileStartPlayingEvent.h"
 #include "events/FileEndPlayingEvent.h"
 #include "events/PlaybackTimeUpdatedEvent.h"
 
@@ -113,7 +114,7 @@ std::string MPV_Listener::parseEventString(std::string evtStr, Json::Value & ful
 
 void MPV_Listener::handleEvent(std::string mpvEvt, Json::Value & fullJson) {
     if(mpvEvt.compare("") == 0) { return; }
-    
+
     //Observe changed properties
     if(mpvEvt.compare("property-change") == 0)
     {
@@ -142,7 +143,12 @@ void MPV_Listener::handleEvent(std::string mpvEvt, Json::Value & fullJson) {
         EventBus::FireEvent(e);
         return;
     }
-    if(mpvEvt.compare("start-file") == 0) { }
+    if((mpvEvt.compare("start-file") == 0) || (mpvEvt.compare("playback-restart") == 0))
+    {
+        FileStartPlayingEvent e(*this);
+        EventBus::FireEvent(e);
+        return;
+    }
     if(mpvEvt.compare("pause") == 0) { }
 }
 
