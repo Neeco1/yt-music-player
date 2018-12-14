@@ -141,7 +141,7 @@ function handleWsMessage(e) {
 
         case "playlist_add_in_progress":
             var playlist = jsonMsg.data;
-            blockContainer.appendChild(playlistToDom(playlist, true));
+            blockContainer.appendChild(gui_playlistToDom(playlist, true));
             return;   
         
         case "playlist_add_done":

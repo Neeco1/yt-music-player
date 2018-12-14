@@ -8,6 +8,11 @@
         "stdexcept": "cpp",
         "typeinfo": "cpp",
         "algorithm": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "iterator": "cpp",
+        "string": "cpp",
+        "vector": "cpp"
     }
 }
