@@ -552,9 +552,7 @@ ul#search_overlay_results {
 
 @media screen and (min-width: 600px) {
     .shy_overlay {
-        width:500px;
-        left:50%;
-        margin-left:-250px;       
+        width:500px;   
     }
     .playlist_block {
         width:calc(100% / 10); 
