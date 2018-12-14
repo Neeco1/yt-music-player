@@ -11,8 +11,8 @@ var newPlaySendBtn, newPlayForm;
  * GUI Initialization
  ******************************************************************************/
 function gui_init() {
-    var playlistNameInput = document.getElementById("playlist_name");
-    var playlistUrlInput = document.getElementById("playlist_url");
+    playlistNameInput = document.getElementById("playlist_name");
+    playlistUrlInput = document.getElementById("playlist_url");
 
     gui_initButtons();
     gui_initCircleDiv();
