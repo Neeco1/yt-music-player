@@ -68,15 +68,16 @@ function gui_initCircleDiv() {
         overlay.style.display="block";
     });
 }
+function gui_closeOverlay() {
+    overlay.style.display = "none";
+    playlistNameInput.value = "";
+    playlistUrlInput.value = "";
+}
+
 function gui_initOverlay() {
     overlay = document.getElementById("overlay");
     overlayClose = document.getElementById("overlay_close");
-    function closeOverlay() {
-        overlay.style.display = "none";
-        playlistNameInput.value = "";
-        playlistUrlInput.value = "";
-    }
-    overlayClose.addEventListener("click", closeOverlay);
+    overlayClose.addEventListener("click", gui_closeOverlay);
 }
 function gui_initSearch() {
     searchBtn = document.getElementById("search_btn");
@@ -140,7 +141,7 @@ function gui_initOverlayButtonComponent() {
         var playlistName = playlistNameInput.value.trim();
         wsConn.send('{ "cmd" : "add_playlist", '
             + '"data" : {"playlist_url":"'+playlistUrl+'", "name":"'+playlistName+'"} }');
-        closeOverlay();
+        gui_closeOverlay();
         newPlaySendBtn.removeAttribute("disabled");
     }
     newPlayForm.addEventListener("submit", function(e) {
