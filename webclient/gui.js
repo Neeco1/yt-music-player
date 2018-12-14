@@ -336,10 +336,12 @@ function gui_loadPlaylistDataToOverlay(playlist) {
         return row;
     } 
  
+    var numTracks = playlist.tracks.length;
+
     var divTitle = document.getElementById("playlistoverlay_title");
     var divTracks = document.getElementById("playlistoverlay_tracks");
     //Clear track div
-    divTitle.innerHTML = playlist.name;
+    divTitle.innerHTML = playlist.name + " (" + numTracks + ")";
     divTracks.innerHTML = "";
 
     //List all tracks
