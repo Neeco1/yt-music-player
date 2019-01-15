@@ -244,7 +244,11 @@ function gui_createLoadingDom() {
 function gui_playlistToDom(playlist, in_progress) {
     var blockDiv = document.createElement("div");
     blockDiv.setAttribute("class", "playlist_block");
-    
+    blockDiv.addEventListener("click", function() {
+        gui_loadPlaylistDataToOverlay(playlist);
+        gui_showOverlay("playlist_overlay");
+    });
+
     if(playlist.playing)
     {
         currentPlaylistId = playlist.id;
@@ -262,11 +266,6 @@ function gui_playlistToDom(playlist, in_progress) {
     subDiv.setAttribute("class", "block_content");
     var link = document.createElement("a");
     link.setAttribute("class", "title");
-    link.setAttribute("href", "#");
-    link.addEventListener("click", function() {
-        gui_loadPlaylistDataToOverlay(playlist);
-        gui_showOverlay("playlist_overlay");
-    });
     var span = document.createElement("span");
     span.innerHTML = playlist.name;
     link.appendChild(span);

@@ -555,7 +555,16 @@ ul#search_overlay_results {
         width:500px;   
     }
     .playlist_block {
-        width:calc(100% / 10); 
+        width:calc(100% / 6); 
+    }
+    .block_round {
+        width:calc(100% / 6 - 10px);
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .playlist_block {
+        width:calc(100% / 10);
     }
     .block_round {
         width:calc(100% / 10 - 10px);
