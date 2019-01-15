@@ -45,4 +45,3 @@ Possible commands:
 For details, see the file [WebSocketPlayer.cpp](https://github.com/Neeco1/yt-music-player/blob/master/src/WebSocketPlayer.cpp)
 
 ## TODO
-- [ ] Change internal architecture so that playback is handled by MusicPlayer class, not by Playlist class
