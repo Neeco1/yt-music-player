@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 
-#if __cplusplus > 201402L || (defined(_MSC_VER) && _MSC_VER >= 1910)
+#if __cplusplus > 201402L || _MSVC_LANG > 201402L
 #include <string_view>
 namespace SimpleWeb {
   using string_view = std::string_view;
@@ -228,7 +228,6 @@ namespace SimpleWeb {
   public:
     /// Parse request line and header fields
     static bool parse(std::istream &stream, std::string &method, std::string &path, std::string &query_string, std::string &version, CaseInsensitiveMultimap &header) noexcept {
-      header.clear();
       std::string line;
       std::size_t method_end;
       if(getline(stream, line) && (method_end = line.find(' ')) != std::string::npos) {
@@ -276,7 +275,6 @@ namespace SimpleWeb {
   public:
     /// Parse status line and header fields
     static bool parse(std::istream &stream, std::string &version, std::string &status_code, CaseInsensitiveMultimap &header) noexcept {
-      header.clear();
       std::string line;
       std::size_t version_end;
       if(getline(stream, line) && (version_end = line.find(' ')) != std::string::npos) {

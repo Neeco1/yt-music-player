@@ -135,7 +135,6 @@ namespace SimpleWeb {
       std::shared_ptr<ScopeRunner> handler_runner;
 
       std::unique_ptr<socket_type> socket; // Socket must be unique_ptr since asio::ssl::stream<asio::ip::tcp::socket> is not movable
-      std::mutex socket_close_mutex;
 
       asio::streambuf read_buffer;
       std::shared_ptr<InMessage> fragmented_in_message;
@@ -146,9 +145,8 @@ namespace SimpleWeb {
 
       void close() noexcept {
         error_code ec;
-        std::unique_lock<std::mutex> lock(socket_close_mutex); // The following operations seems to be needed to run sequentially
         socket->lowest_layer().shutdown(asio::ip::tcp::socket::shutdown_both, ec);
-        socket->lowest_layer().close(ec);
+        socket->lowest_layer().cancel(ec);
       }
 
       void set_timeout(long seconds = -1) noexcept {
@@ -186,25 +184,6 @@ namespace SimpleWeb {
           error_code ec;
           timer->cancel(ec);
         }
-      }
-
-      bool generate_handshake(const std::shared_ptr<asio::streambuf> &write_buffer) {
-        std::ostream handshake(write_buffer.get());
-
-        auto header_it = header.find("Sec-WebSocket-Key");
-        if(header_it == header.end())
-          return false;
-
-        static auto ws_magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-        auto sha1 = Crypto::sha1(header_it->second + ws_magic_string);
-
-        handshake << "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
-        handshake << "Upgrade: websocket\r\n";
-        handshake << "Connection: Upgrade\r\n";
-        handshake << "Sec-WebSocket-Accept: " << Crypto::Base64::encode(sha1) << "\r\n";
-        handshake << "\r\n";
-
-        return true;
       }
 
       asio::io_service::strand strand;
@@ -346,6 +325,7 @@ namespace SimpleWeb {
       std::mutex connections_mutex;
 
     public:
+      std::function<StatusCode(std::shared_ptr<Connection>)> on_handshake;
       std::function<void(std::shared_ptr<Connection>)> on_open;
       std::function<void(std::shared_ptr<Connection>, std::shared_ptr<InMessage>)> on_message;
       std::function<void(std::shared_ptr<Connection>, int, const std::string &)> on_close;
@@ -379,6 +359,8 @@ namespace SimpleWeb {
       /// Maximum size of incoming messages. Defaults to architecture maximum.
       /// Exceeding this limit will result in a message_size error code and the connection will be closed.
       std::size_t max_message_size = std::numeric_limits<std::size_t>::max();
+      /// Additional header fields to send when performing WebSocket handshake.
+      CaseInsensitiveMultimap header;
       /// IPv4 address in dotted decimal form or IPv6 address in hexadecimal notation.
       /// If empty, the address will be any address.
       std::string address;
@@ -412,7 +394,7 @@ namespace SimpleWeb {
       if(config.address.size() > 0)
         endpoint = asio::ip::tcp::endpoint(asio::ip::address::from_string(config.address), config.port);
       else
-        endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), config.port);
+        endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v6(), config.port);
 
       if(!io_service) {
         io_service = std::make_shared<asio::io_service>();
@@ -564,23 +546,55 @@ namespace SimpleWeb {
         regex::smatch path_match;
         if(regex::regex_match(connection->path, path_match, regex_endpoint.first)) {
           auto write_buffer = std::make_shared<asio::streambuf>();
+          std::ostream handshake(write_buffer.get());
 
-          if(connection->generate_handshake(write_buffer)) {
-            connection->path_match = std::move(path_match);
-            connection->set_timeout(config.timeout_request);
-            asio::async_write(*connection->socket, *write_buffer, [this, connection, write_buffer, &regex_endpoint](const error_code &ec, std::size_t /*bytes_transferred*/) {
-              connection->cancel_timeout();
-              auto lock = connection->handler_runner->continue_lock();
-              if(!lock)
-                return;
-              if(!ec) {
-                connection_open(connection, regex_endpoint.second);
-                read_message(connection, regex_endpoint.second);
-              }
-              else
-                connection_error(connection, regex_endpoint.second, ec);
-            });
+          bool handshake_success;
+
+          StatusCode status_code = StatusCode::success_ok;
+          if(regex_endpoint.second.on_handshake)
+            status_code = regex_endpoint.second.on_handshake(connection);
+
+          if(status_code == StatusCode::success_ok) {
+            auto header_it = connection->header.find("Sec-WebSocket-Key");
+            if(header_it == connection->header.end()) {
+              handshake << "HTTP/1.1 426 Upgrade Required\r\n\r\n";
+              handshake_success = false;
+            }
+            else {
+              static auto ws_magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+              auto sha1 = Crypto::sha1(header_it->second + ws_magic_string);
+
+              handshake << "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
+              handshake << "Upgrade: websocket\r\n";
+              handshake << "Connection: Upgrade\r\n";
+              handshake << "Sec-WebSocket-Accept: " << Crypto::Base64::encode(sha1) << "\r\n";
+              for(auto &header_field : config.header)
+                handshake << header_field.first << ": " << header_field.second << "\r\n";
+              handshake << "\r\n";
+              handshake_success = true;
+            }
           }
+          else {
+            handshake << "HTTP/1.1 " + SimpleWeb::status_code(status_code) + "\r\n\r\n";
+            handshake_success = false;
+          }
+
+          connection->path_match = std::move(path_match);
+          connection->set_timeout(config.timeout_request);
+          asio::async_write(*connection->socket, *write_buffer, [this, connection, write_buffer, &regex_endpoint, handshake_success](const error_code &ec, std::size_t /*bytes_transferred*/) {
+            connection->cancel_timeout();
+            auto lock = connection->handler_runner->continue_lock();
+            if(!lock)
+              return;
+            if(!handshake_success)
+              return;
+            if(!ec) {
+              connection_open(connection, regex_endpoint.second);
+              read_message(connection, regex_endpoint.second);
+            }
+            else
+              connection_error(connection, regex_endpoint.second, ec);
+          });
           return;
         }
       }
