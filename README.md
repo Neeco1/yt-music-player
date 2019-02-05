@@ -30,8 +30,8 @@ Currently the player supports only youtube tracks and playlists. Feel free to ad
 
 ```
 {
-    'cmd' : '<command>',
-    'data' : {}
+    "cmd" : "<command>",
+    "data" : {}
 }
 ```
 
