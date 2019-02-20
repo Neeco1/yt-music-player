@@ -59,11 +59,11 @@ bool MusicPlayer::startPlayback() {
     {
         return false;
     }
+    MPV_Controller::sendCommandFromMap("cmdUnpausePlayback");
     
     //Resume if paused
     if(playbackState == Paused)
     {
-        MPV_Controller::sendCommandFromMap("cmdUnpausePlayback");
         currentPlaylist->setPlaying(true);
         playbackState = Playing;
         return true;
@@ -168,6 +168,9 @@ bool MusicPlayer::playTrackFromCurrentListWithIndex(unsigned int index) {
     if(!currentPlaylist) { return false; }
     
     currentPlaylist->setCurrentTrackNumber(index);
+
+    //std::cout << "Playing track with index " << index << "." << std::endl;
+
     return startPlayback();
 }
 
@@ -286,6 +289,9 @@ bool MusicPlayer::selectPlaylist(const std::string & playlist_id) {
         auto playlistPtr = playlists.at(playlist_id);
         currentPlaylist = playlistPtr;
         currentPlaylist->setPlaying(true);
+
+        //std::cout << "Selected playlist '" << playlistPtr->getName() << "'." << std::endl;
+
         return true;
     }
     catch(std::out_of_range ex)
@@ -299,7 +305,8 @@ bool MusicPlayer::setPlaybackTime(std::string time) {
 }
 
 void MusicPlayer::readDataFromJsonFile() {
-    std::string pathname = std::string(getenv("HOME")) + "/websocketPlayer/playlists.json";
+    std::string pathname = std::string(Utils::getWorkingDir() + "/playlists.json");
+
     //std::cout << "Pathname of json file: " << pathname << std::endl;
     Json::Value jsonData = Utils::readJsonFromFile(pathname);
     //Create playlist objects and add them to the player

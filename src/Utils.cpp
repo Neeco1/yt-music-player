@@ -9,7 +9,15 @@
 #include <memory>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <cstdio>
+#include <cstdio> /* defines FILENAME_MAX */
+
+#if defined(_WIN32)
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
 
 std::mutex Utils::jsonFileMutex;
 
@@ -48,8 +56,25 @@ std::string Utils::getTimeString() {
     return std::string(buffer);
 }
 
+std::string Utils::getWorkingDir() {
+	char * envPath = getenv("HOME");
+	std::string envStr;
+	if(envPath == nullptr)
+	{
+		char buff[FILENAME_MAX];
+		GetCurrentDir( buff, FILENAME_MAX );
+		envStr = buff;
+	}
+	else
+	{
+		envStr = envPath;
+	}
+    return std::string(envStr + "/websocketPlayer");
+}
+
 bool Utils::checkDirectory() {
-    std::string pathname = std::string(getenv("HOME")) + "/websocketPlayer";
+	std::string pathname = Utils::getWorkingDir();
+
     struct stat info;
     //Check if directory exists
     if(stat(pathname.c_str(), &info) != 0) // "stat != 0" means "does not exist"
@@ -61,6 +86,7 @@ bool Utils::checkDirectory() {
         if(mkdir(pathname.c_str(), 0733) != 0)
         #endif
         {
+        	std::cerr << "Could not create directory \"" <<  pathname.c_str() << "\"!";
             exit(EXIT_FAILURE);
         }
     }

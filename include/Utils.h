@@ -17,6 +17,7 @@ public:
     static std::string execCommand(std::string & cmd);
     static TrackDuration secondsToTrackDuration(unsigned int seconds);
     static std::string getTimeString();
+    static std::string getWorkingDir();
     
     static bool checkDirectory();
     static std::string jsonToString(const Json::Value & json);
