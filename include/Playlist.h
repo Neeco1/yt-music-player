@@ -26,6 +26,7 @@ protected:
     std::string playlistUrl;
     
     bool playing;
+    bool isShuffled;
 
 public:
     Playlist();
@@ -56,6 +57,9 @@ public:
     std::shared_ptr<Track> nextTrack();
     std::shared_ptr<Track> previousTrack();
     
+    void shuffleList();
+    void clearShuffle();
+
     virtual Json::Value getJson() = 0;
     
 };

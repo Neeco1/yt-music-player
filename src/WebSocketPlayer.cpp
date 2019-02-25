@@ -191,6 +191,7 @@ void WebSocketPlayer::initCommandEndpoint() {
         }
         else if(command.compare("set_playback_mode") == 0)
         {
+
             /**
              * Data format: { "mode" : "some_valid_mode" }
              */
@@ -392,9 +393,8 @@ Json::Value WebSocketPlayer::selectPlaylist(std::string playlist_id) {
     return responseJson;
 }
 
-Json::Value WebSocketPlayer::setPlaybackMode(std::string mode) {
+Json::Value WebSocketPlayer::setPlaybackMode(const std::string & mode) {
     Json::Value responseJson;
-    
     bool success = false;
     //Find out the given playback mode
     if(mode.compare("Shuffle") == 0)

@@ -110,7 +110,11 @@ function handlePlaybackInfo(jsonMsg) {
     }
     if(info.playback_mode === "shuffle")
     {
-        
+    	gui_updateShuffleButton(true);
+    }
+    else
+    {
+    	gui_updateShuffleButton(false);
     }
 }
 
@@ -202,6 +206,19 @@ function handleWsMessage(e) {
         case "playback_paused":
             gui_updateButtons(false, false, false, true, false);
         break;
+        
+        case "playback_mode_set":
+        	if(jsonMsg.data.mode === "Normal")
+        	{
+        		gui_updateShuffleButton(false);
+        		return;
+    		}
+        		
+        	if(jsonMsg.data.mode === "Shuffle")
+        		gui_updateShuffleButton(true);
+    		else
+    			gui_updateShuffleButton(false);
+		break;
     }
 }
 
@@ -318,14 +335,14 @@ function handleProgressClick(e) {
 </div>
 
 <div id="button_container">
-    <i id="btnPrevious" onclick="previousTrack()" class="material-icons">skip_previous</i>
+    <i id="btnPrev" onclick="previousTrack()" class="material-icons">skip_previous</i>
     <i id="btnPlay" onclick="startPlaying()" class="material-icons">play_circle_outline</i></a>&nbsp;
     <i id="btnStop" onclick="stopPlaying()" class="material-icons">stop</i></a>&nbsp;
     <i id="btnPause" onclick="pausePlaying()" class="material-icons">pause_circle_outline</i></a>
     <i id="btnNext" onclick="nextTrack()" class="material-icons">skip_next</i></a>
     <div id="playback_mode_area">
         <i id="btnRepeat" onclick="gui_setPlaybackMode('repeat')" class="material-icons hidden">repeat</i>
-        <i id="btnShuffle" onclick="gui_setPlaybackMode('shuffle')"class="material-icons">shuffle</i>
+        <i id="btnShuffle" onclick="gui_setPlaybackMode('shuffle')" class="material-icons">shuffle</i>
     </div>
 </div>
 

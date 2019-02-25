@@ -9,9 +9,6 @@ class Playlist;
 #include "jsoncpp/json/json.h"
 
 class YoutubePlaylist : public Playlist {
-private:
-    std::atomic<bool> stopPlaybackFlag;
-    
 public:
     YoutubePlaylist(std::string playlistUrl);
     YoutubePlaylist(Json::Value json);

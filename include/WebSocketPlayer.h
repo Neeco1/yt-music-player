@@ -50,7 +50,7 @@ public:
     Json::Value addPlaylist(const std::string & url, const std::string & name);
     Json::Value selectPlaylist(std::string playlist_id);
     
-    Json::Value setPlaybackMode(std::string mode);
+    Json::Value setPlaybackMode(const std::string & mode);
     Json::Value getPlaybackInfo();
     
     Json::Value updatePlaylists();

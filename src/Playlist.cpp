@@ -10,7 +10,7 @@
 #include "jsoncpp/json/json.h"
 #include "Utils.h"
 
-Playlist::Playlist() : currentTrack(0), playing(false)
+Playlist::Playlist() : currentTrack(0), playing(false), isShuffled(false)
 {
     //Initially set timestamped id
     std::stringstream ss;
@@ -46,7 +46,10 @@ void Playlist::addTrack(const std::shared_ptr<Track> track) {
 }
 
 const std::vector<std::shared_ptr<Track>> & Playlist::getAllTracks() const {
-    return tracks;
+	if(isShuffled)
+		return shuffledOrder;
+	else
+		return tracks;
 }
 
 const unsigned int Playlist::getTrackCount() const {
@@ -74,25 +77,33 @@ unsigned int Playlist::getCurrentTrackNumber() {
 
 std::shared_ptr<Track> Playlist::getCurrentTrack() {
     unsigned int trackNr = getCurrentTrackNumber();
-    if(tracks.size() == 0 || trackNr > tracks.size()) {
-        return nullptr;
+    if(tracks.size() == 0 || trackNr > tracks.size())
+    {
+    	return nullptr;
     }
-    return tracks[trackNr];
+
+    if(isShuffled)
+    	return shuffledOrder[trackNr];
+    else
+    	return tracks[trackNr];
 }
 
 std::shared_ptr<Track> Playlist::nextTrack() {
     unsigned int trackCount = getTrackCount();
     unsigned int curTrackNumber = getCurrentTrackNumber();
     ++curTrackNumber;
-    //Limit to maximum of tracks in list
-    if(curTrackNumber >= trackCount) {
-        return getCurrentTrack();
-    }
-    this->currentTrack = curTrackNumber;
+
+    //Limit to maximum of tracks in list (restart at 0)
+    if(curTrackNumber >= trackCount)
+    	setCurrentTrackNumber(0);
+    else
+    	this->currentTrack = curTrackNumber;
+
     return getCurrentTrack();
 }
 std::shared_ptr<Track> Playlist::previousTrack() {
     int curTrackNumber = getCurrentTrackNumber();
+
     //Check if we are already at the beginning (limit to 0)
     if(curTrackNumber > 0) {
         --curTrackNumber;
@@ -102,3 +113,14 @@ std::shared_ptr<Track> Playlist::previousTrack() {
     return getCurrentTrack();
 }
 
+void Playlist::shuffleList() {
+	shuffledOrder.clear();
+	shuffledOrder = tracks;
+	std::random_shuffle(shuffledOrder.begin(), shuffledOrder.end());
+	isShuffled = true;
+}
+
+void Playlist::clearShuffle() {
+	shuffledOrder.clear();
+	isShuffled = false;
+}

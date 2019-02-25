@@ -1,4 +1,4 @@
-var btnPrev, btnPlay, btnStop, btnPause, btnNext;
+var btnPrev, btnPlay, btnStop, btnPause, btnNext, btnRepeat, btnShuffle;
 var circleDiv;
 var overlay, overlayClose;
 var playlistNameInput, playlistUrlInput;
@@ -49,6 +49,8 @@ function gui_initButtons() {
     btnStop = document.getElementById("btnStop");
     btnPlay = document.getElementById("btnPlay");
     btnNext = document.getElementById("btnNext");
+    btnRepeat = document.getElementById("btnRepeat");
+    btnShuffle = document.getElementById("btnShuffle");
 }
 function gui_initCircleDiv() {
     circleDiv = document.getElementById("circle");
@@ -217,6 +219,13 @@ function gui_updateButtons(prev, play, stop, pause, next) {
     else btnNext.classList.add("stateActive");
 }
 
+function gui_updateShuffleButton(state) {
+	if(state)
+		btnShuffle.classList.add("stateActive");
+	else
+		btnShuffle.classList.remove("stateActive");
+}
+
 function gui_updateNowPlaying(list_id, now_playing) {
     var list_elm = document.getElementById("playlist"+list_id);
     if(now_playing)
@@ -286,13 +295,21 @@ function gui_showPlaylists() {
 function gui_setPlaybackMode(mode) {
     if(mode === "repeat") 
     {
-        document.getElementById("btnRepeat").classList.remove("hidden");
-        document.getElementById("btnShuffle").classList.add("visible");
+    	wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Repeat" } }');
+    	
+        btnRepeat.classList.remove("hidden");
+    	btnShuffle.classList.add("visible");
     }
     if(mode === "shuffle") 
     {
-        document.getElementById("btnRepeat").classList.add("hidden");
-        document.getElementById("btnShuffle").classList.remove("visible");
+    	if(!btnShuffle.classList.contains("stateActive"))
+    	{
+    		wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Shuffle" } }');
+		}
+		else
+		{
+			wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Normal" } }');
+		}
     }
 }
 

@@ -22,7 +22,7 @@ MusicPlayer::MusicPlayer()
 : currentPlaylist(nullptr),
   stopPressed(false), prevPressed(false), nextPressed(false),
   newPlaylistSelected(false),
-  currentPlaybackTime(0), playbackState(Stopped),
+  currentPlaybackTime(0), playbackState(Stopped), playbackMode(Normal),
   playlistUpdater(new PlaylistUpdater(this))
 {
     
@@ -214,7 +214,7 @@ PlaybackInfo MusicPlayer::getPlaybackInfo() const {
         info.trackId = track->getTrackId();
         info.playbackTime = currentPlaybackTime;
         info.duration = track->getDurationSeconds();
-        info.playbackMode = Normal;
+        info.playbackMode = playbackMode;
         info.thumbUrl = track->getThumbUrl();
     }    
     return info;
@@ -226,14 +226,17 @@ PlaybackState MusicPlayer::getPlaybackState() const {
 
 bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {
     if(!currentPlaylist) { return false; }
-    this->playbackMode = playbackMode;
+    this->playbackMode = mode;
     
-    //TODO handle Shuffle
-    /*if(playbackMode == Shuffle)
+    //Handle Shuffle
+    if(playbackMode == Shuffle)
     {
-        shuffledOrder = tracks;
-        std::random_shuffle ( shuffledOrder.begin(), shuffledOrder.end() );
-    }*/
+    	currentPlaylist->shuffleList();
+    }
+    else if(playbackMode == Normal)
+    {
+    	currentPlaylist->clearShuffle();
+    }
     
     return true;
 }
@@ -294,7 +297,7 @@ bool MusicPlayer::selectPlaylist(const std::string & playlist_id) {
 
         return true;
     }
-    catch(std::out_of_range ex)
+    catch(std::out_of_range & ex)
     {
         return false;
     }

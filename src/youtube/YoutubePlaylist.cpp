@@ -9,13 +9,13 @@
 #include "events/PlaybackStoppedEvent.h"
 
 YoutubePlaylist::YoutubePlaylist(std::string playlistUrl)
-: Playlist(), stopPlaybackFlag(false)
+: Playlist()
 {
     this->playlistUrl = playlistUrl;
 }
 
 YoutubePlaylist::YoutubePlaylist(Json::Value json)
-: Playlist(), stopPlaybackFlag(false)
+: Playlist()
 {
     setListId(json["id"].asString());
     setName(json["name"].asString());
@@ -31,12 +31,19 @@ Json::Value YoutubePlaylist::getJson() {
     playlist["name"] = name;
     playlist["id"] = listId;
     playlist["url"] = playlistUrl;
+    playlist["isShuffled"] = ((isShuffled) ? "true" : "false");
     
     Json::Value tracksJson;
     int i = 0;
-    for(std::shared_ptr<Track> track : tracks)
+    std::vector<std::shared_ptr<Track>> * listPtr;
+    if(!isShuffled)
+    	listPtr = &tracks;
+    else
+    	listPtr = &shuffledOrder;
+
+    for(auto trackIt = listPtr->begin() ; trackIt != listPtr->end() ; ++trackIt)
     {
-        tracksJson[i] = track->getJson();
+        tracksJson[i] = (*trackIt)->getJson();
         ++i;
     }
     playlist["tracks"] = tracksJson;
