@@ -35,12 +35,25 @@ Currently the player supports only youtube tracks and playlists. Feel free to ad
 }
 ```
 
-Possible commands:
+Supported commands:
 * stop
 * play
+* pause
 * set_volume
+* get_volume
 * get_playlists
+* get_playlist
 * add_playlist
+* update_playlists
+* select_playlist
+* play_track_from_list
+* set_playback_mode
+* get_playback_info
+* nextTrack
+* previousTrack
+* setPlaybackTime
+* play_media_from_url
+* update_yt_dl
 
 For details, see the file [WebSocketPlayer.cpp](https://github.com/Neeco1/yt-music-player/blob/master/src/WebSocketPlayer.cpp)
 
