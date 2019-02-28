@@ -20,13 +20,11 @@ protected:
     std::string listId;
     std::string name;
     std::vector<std::shared_ptr<Track>> tracks;
-    std::vector<std::shared_ptr<Track>> shuffledOrder;
     int currentTrack;
     
     std::string playlistUrl;
     
     bool playing;
-    bool isShuffled;
 
 public:
     Playlist();
@@ -54,12 +52,9 @@ public:
     unsigned int getCurrentTrackNumber();
     std::shared_ptr<Track> getCurrentTrack();
     
-    std::shared_ptr<Track> nextTrack();
+    std::shared_ptr<Track> nextTrack(bool shuffled);
     std::shared_ptr<Track> previousTrack();
     
-    void shuffleList();
-    void clearShuffle();
-
     virtual Json::Value getJson() = 0;
     
 };

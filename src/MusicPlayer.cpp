@@ -126,18 +126,18 @@ bool MusicPlayer::pausePlayback() {
     return false;
 }
 //public
-bool MusicPlayer::playNext() {
+bool MusicPlayer::playNext(bool shuffled) {
     nextPressed = true;
-    return nextTrack();
+    return nextTrack(shuffled);
 }
 //private
-bool MusicPlayer::nextTrack() {
+bool MusicPlayer::nextTrack(bool shuffled) {
     if(!currentPlaylist) { return false; }
     
     //Only go to next if we are currently playing
     //if(playbackState == Playing)
     //{
-    auto nextTrack = currentPlaylist->nextTrack();
+    auto nextTrack = currentPlaylist->nextTrack(shuffled);
     if(!nextTrack) { return false; }
     MPV_Controller::playMedia(nextTrack->getUrl());
     return true;
@@ -228,14 +228,13 @@ bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {
     if(!currentPlaylist) { return false; }
     this->playbackMode = mode;
     
-    //Handle Shuffle
-    if(playbackMode == Shuffle)
+    if(playbackMode == Normal)
     {
-    	currentPlaylist->shuffleList();
+    	//TODO
     }
-    else if(playbackMode == Normal)
+    else if(playbackMode == Repeat)
     {
-    	currentPlaylist->clearShuffle();
+    	//TODO
     }
     
     return true;
@@ -244,6 +243,10 @@ bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {
 bool MusicPlayer::addPlaylist(const std::shared_ptr<Playlist> playlistPtr) {
     playlists[playlistPtr->getListId()] = playlistPtr;
     return true;
+}
+
+std::shared_ptr<Playlist> MusicPlayer::getPlaylist(const std::string & playlist_id) const {
+	return playlists.at(playlist_id);
 }
 
 std::string MusicPlayer::addPlaylistFromUrl(std::string url, std::string name) {
@@ -354,7 +357,7 @@ void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
         newPlaylistSelected = false;
         return;
     }
-    nextTrack();
+    nextTrack(false);
 }
 
 void MusicPlayer::onEvent(PlaybackTimeUpdatedEvent & e) {

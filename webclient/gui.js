@@ -1,3 +1,4 @@
+var buttonContainer;
 var btnPrev, btnPlay, btnStop, btnPause, btnNext, btnRepeat, btnShuffle;
 var circleDiv;
 var overlay, overlayClose;
@@ -6,6 +7,7 @@ var searchBtn, closeSearchOverlay, searchText, globalSearchTimer;
 var titleDiv, designSelector, flatBtn, roundBtn, blocks;
 var volSlider;
 var newPlaySendBtn, newPlayForm;
+var progressBar, playbackInfoDiv;
 
 /******************************************************************************
  * GUI Initialization
@@ -38,12 +40,14 @@ function gui_init() {
     playbackInfoContent.addEventListener("click", function() {
         gui_loadPlaylistDataToOverlay(playlists[currentPlaylistId]);
         gui_showOverlay("playlist_overlay");
+        gui_scrollToTrack();
     });
     //Add key listeners
     gui_addKeyListeners();
 }
 
 function gui_initButtons() {
+    buttonContainer = document.getElementById("button_container");
     btnPrev = document.getElementById("btnPrev");
     btnPause = document.getElementById("btnPause");
     btnStop = document.getElementById("btnStop");
@@ -51,6 +55,8 @@ function gui_initButtons() {
     btnNext = document.getElementById("btnNext");
     btnRepeat = document.getElementById("btnRepeat");
     btnShuffle = document.getElementById("btnShuffle");
+    progressBar = document.getElementById("progress_bar");
+    playbackInfoDiv = document.getElementById("playback_info");
 }
 function gui_initCircleDiv() {
     circleDiv = document.getElementById("circle");
@@ -171,6 +177,54 @@ function gui_addKeyListeners() {
 /*****************************************************************************
  * GUI Logic
  *****************************************************************************/
+var oldPlaybackInfo;
+function gui_updatePlaybackState(playbackInfo) {
+    document.getElementById("now_playing_title").innerHTML = playbackInfo.title;
+    document.getElementById("now_playing_thumb").setAttribute("src", playbackInfo.thumb_url);
+    //console.log("Duration: " + playbackInfo.track_duration + ", played: " + playbackInfo.track_playback_time);
+    //console.log(playbackInfo.state);
+    
+    if(playbackInfo.state === "playing" || playbackInfo.state === "paused")
+    {
+        buttonContainer.style.marginBottom = "60px";
+        btnStop.classList.remove("stateActive");
+        
+        if(playbackInfo.state === "paused") {
+            btnPlay.classList.remove("stateActive");
+            btnPause.classList.add("stateActive");
+        } else {
+            btnPlay.classList.add("stateActive");
+            btnPause.classList.remove("stateActive");
+        }
+        var progressWidthPercent = (playbackInfo.track_playback_time / playbackInfo.track_duration) * 100;
+        progressBar.style.width = progressWidthPercent+"%";
+
+        //Update overlay, if it is currently open
+        if(gui_isOverlayOpen("playlist_overlay"))
+        {
+            //Mark track as playing in gui list
+            var track_rows = document.getElementsByClassName("track_row");
+            [].forEach.call(track_rows, function (row) { row.classList.remove("playing"); });
+            var trackRowElm = document.getElementById("track"+playbackInfo.track_id);
+            trackRowElm.classList.add("playing");
+
+            if(oldPlaybackInfo && (oldPlaybackInfo.track_id != playbackInfo.track_id))
+            {
+                gui_scrollToTrack();
+            }
+        }
+    }
+    else
+    {
+        btnPause.classList.remove("stateActive");
+        btnStop.classList.add("stateActive");
+        btnPlay.classList.remove("stateActive");
+        progressBar.style.width = "0";
+        var track_rows = document.getElementsByClassName("track_row");
+        [].forEach.call(track_rows, function (row) { row.classList.remove("playing"); });
+    }
+    oldPlaybackInfo = playbackInfo;
+}
 
 function gui_updatePlaybackStarted() {
     gui_showNowPlaying();
@@ -189,13 +243,13 @@ function gui_updatePlaybackStopped() {
 }
 
 function gui_showNowPlaying() {
-    document.getElementById("button_container").style.marginBottom = "60px";
-    document.getElementById("playback_info").style.marginBottom="0px";
+    buttonContainer.style.marginBottom = "60px";
+    playbackInfoDiv.style.marginBottom="0px";
 }
 
 function gui_hideNowPlaying() {
-    document.getElementById("button_container").style.marginBottom = "0px";
-    document.getElementById("playback_info").style.marginBottom="-60px";
+    buttonContainer.style.marginBottom = "0px";
+    playbackInfoDiv.style.marginBottom="-60px";
 }
 
 function gui_showNotification(message) {
@@ -217,13 +271,6 @@ function gui_updateButtons(prev, play, stop, pause, next) {
 
     if(!next) btnNext.classList.remove("stateActive");
     else btnNext.classList.add("stateActive");
-}
-
-function gui_updateShuffleButton(state) {
-	if(state)
-		btnShuffle.classList.add("stateActive");
-	else
-		btnShuffle.classList.remove("stateActive");
 }
 
 function gui_updateNowPlaying(list_id, now_playing) {
@@ -256,6 +303,10 @@ function gui_playlistToDom(playlist, in_progress) {
     blockDiv.addEventListener("click", function() {
         gui_loadPlaylistDataToOverlay(playlist);
         gui_showOverlay("playlist_overlay");
+        if(playlist.playing)
+        {
+            gui_scrollToTrack();
+        }
     });
 
     if(playlist.playing)
@@ -292,30 +343,20 @@ function gui_showPlaylists() {
     }
 }
 
-function gui_setPlaybackMode(mode) {
-    if(mode === "repeat") 
-    {
-    	wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Repeat" } }');
-    	
-        btnRepeat.classList.remove("hidden");
-    	btnShuffle.classList.add("visible");
-    }
-    if(mode === "shuffle") 
-    {
-    	if(!btnShuffle.classList.contains("stateActive"))
-    	{
-    		wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Shuffle" } }');
-		}
-		else
-		{
-			wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Normal" } }');
-		}
-    }
+function gui_btnRepeatClick() {
+    wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Repeat" } }');
+    
+    btnRepeat.classList.remove("hidden");
+}
+
+function gui_btnShuffleClick() {
+    wsConn.send('{ "cmd" : "nextTrack", "data" : { "shuffle": true }}');
 }
 
 function gui_loadPlaylistDataToOverlay(playlist) {
     function createTrackRow(track, trackIndex) {
         var row = document.createElement("div");
+        row.id = "track"+track.id;
         row.classList.add("track_row");
         if(track.id == playbackInfo.track_id) {
             row.classList.add("playing");
@@ -376,4 +417,16 @@ function gui_showOverlay(css_id) {
 function gui_hideOverlay(css_id) {
     var overlay = document.getElementById(css_id);
     overlay.classList.remove("visible");
+}
+
+function gui_isOverlayOpen(overlay_id) {
+	var overlay = document.getElementById(overlay_id);
+	return overlay.classList.contains("visible");
+}
+
+function gui_scrollToTrack() {
+    //Scroll to position
+    var trackRowElm = document.getElementById("track"+playbackInfo.track_id);
+    var rowOffsetTop = Math.max(0, trackRowElm.offsetTop - 60);
+    trackRowElm.parentElement.parentElement.scrollTo({ top: rowOffsetTop, left: 0, behavior: "smooth" });
 }

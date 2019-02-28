@@ -31,15 +31,11 @@ Json::Value YoutubePlaylist::getJson() {
     playlist["name"] = name;
     playlist["id"] = listId;
     playlist["url"] = playlistUrl;
-    playlist["isShuffled"] = ((isShuffled) ? "true" : "false");
     
     Json::Value tracksJson;
     int i = 0;
     std::vector<std::shared_ptr<Track>> * listPtr;
-    if(!isShuffled)
-    	listPtr = &tracks;
-    else
-    	listPtr = &shuffledOrder;
+    listPtr = &tracks;
 
     for(auto trackIt = listPtr->begin() ; trackIt != listPtr->end() ; ++trackIt)
     {

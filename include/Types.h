@@ -10,7 +10,7 @@ struct TrackDuration {
 } ;
 
 enum PlaybackMode {
-    Normal, Shuffle, Repeat, ShuffleAndRepeat
+    Normal, Repeat
 };
 
 enum SupportedSources {

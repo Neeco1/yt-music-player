@@ -9,8 +9,9 @@
 #include "Types.h"
 #include "jsoncpp/json/json.h"
 #include "Utils.h"
+#include "Randomer.h"
 
-Playlist::Playlist() : currentTrack(0), playing(false), isShuffled(false)
+Playlist::Playlist() : currentTrack(0), playing(false)
 {
     //Initially set timestamped id
     std::stringstream ss;
@@ -46,10 +47,7 @@ void Playlist::addTrack(const std::shared_ptr<Track> track) {
 }
 
 const std::vector<std::shared_ptr<Track>> & Playlist::getAllTracks() const {
-	if(isShuffled)
-		return shuffledOrder;
-	else
-		return tracks;
+	return tracks;
 }
 
 const unsigned int Playlist::getTrackCount() const {
@@ -82,22 +80,27 @@ std::shared_ptr<Track> Playlist::getCurrentTrack() {
     	return nullptr;
     }
 
-    if(isShuffled)
-    	return shuffledOrder[trackNr];
-    else
-    	return tracks[trackNr];
+    return tracks[trackNr];
 }
 
-std::shared_ptr<Track> Playlist::nextTrack() {
+std::shared_ptr<Track> Playlist::nextTrack(bool shuffled) {
     unsigned int trackCount = getTrackCount();
-    unsigned int curTrackNumber = getCurrentTrackNumber();
-    ++curTrackNumber;
+    if(!shuffled)
+    {
+        unsigned int curTrackNumber = getCurrentTrackNumber();
+		++curTrackNumber;
 
-    //Limit to maximum of tracks in list (restart at 0)
-    if(curTrackNumber >= trackCount)
-    	setCurrentTrackNumber(0);
+		//Limit to maximum of tracks in list (restart at 0)
+		if(curTrackNumber >= trackCount)
+			setCurrentTrackNumber(0);
+		else
+			this->currentTrack = curTrackNumber;
+    }
     else
-    	this->currentTrack = curTrackNumber;
+    {
+    	Randomer randomer{0, trackCount};
+    	this->currentTrack = randomer();
+    }
 
     return getCurrentTrack();
 }
@@ -111,16 +114,4 @@ std::shared_ptr<Track> Playlist::previousTrack() {
         currentTrack = curTrackNumber;
     }
     return getCurrentTrack();
-}
-
-void Playlist::shuffleList() {
-	shuffledOrder.clear();
-	shuffledOrder = tracks;
-	std::random_shuffle(shuffledOrder.begin(), shuffledOrder.end());
-	isShuffled = true;
-}
-
-void Playlist::clearShuffle() {
-	shuffledOrder.clear();
-	isShuffled = false;
 }

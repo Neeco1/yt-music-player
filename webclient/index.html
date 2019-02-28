@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
 
+<head>
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
 <link rel="stylesheet" type="text/css" href="style.css"/>
@@ -77,48 +77,17 @@ function handleWsClose(e) {
 }
 
 function handlePlaybackInfo(jsonMsg) {
-    console.log(jsonMsg);
     var info = jsonMsg.data.playback_info;
     playbackInfo = info; //Update global playback info
-
-    document.getElementById("now_playing_title").innerHTML = info.title;
-    document.getElementById("now_playing_thumb").setAttribute("src", info.thumb_url);
-    //console.log("Duration: " + info.track_duration + ", played: " + info.track_playback_time);
-    //console.log(info.state);
-    
-    if(info.state === "playing" || info.state === "paused")
-    {
-        document.getElementById("button_container").style.marginBottom = "60px";
-        document.getElementById("btnStop").classList.remove("stateActive");
-        
-        if(info.state === "paused") {
-            document.getElementById("btnPlay").classList.remove("stateActive");
-            document.getElementById("btnPause").classList.add("stateActive");
-        } else {
-            document.getElementById("btnPlay").classList.add("stateActive");
-            document.getElementById("btnPause").classList.remove("stateActive");
-        }
-        var progressWidthPercent = (info.track_playback_time / info.track_duration) * 100;
-        document.getElementById("progress_bar").style.width = progressWidthPercent+"%";
-    }
-    else
-    {
-        document.getElementById("btnPause").classList.remove("stateActive");
-        document.getElementById("btnStop").classList.add("stateActive");
-        document.getElementById("btnPlay").classList.remove("stateActive");
-        document.getElementById("progress_bar").style.width = "0";
-    }
-    if(info.playback_mode === "shuffle")
-    {
-    	gui_updateShuffleButton(true);
-    }
-    else
-    {
-    	gui_updateShuffleButton(false);
-    }
+    gui_updatePlaybackState(info);
 }
 
 function handleWsMessage(e) {
+    if(e.error == 1)
+    {
+        console.log("Error: " + e.data.errorCode);
+        return;
+    }
     if(!e.data) { return; }
     var jsonMsg = JSON.parse(e.data);
 
@@ -142,6 +111,15 @@ function handleWsMessage(e) {
             playlists = jsonMsg.data.playlists;
             gui_showPlaylists();
         break;
+        
+        case "playlist":
+        	playlist = jsonMsg.data.playlist;
+        	playlists[playlist.id] = playlist;
+        	if(playlist.id === currentPlaylistId)
+        	{
+        		gui_loadPlaylistDataToOverlay();
+    		}
+    	break;
 
         case "playlist_add_in_progress":
             var playlist = jsonMsg.data;
@@ -212,12 +190,10 @@ function handleWsMessage(e) {
         	{
         		gui_updateShuffleButton(false);
         		return;
-    		}
-        		
-        	if(jsonMsg.data.mode === "Shuffle")
-        		gui_updateShuffleButton(true);
-    		else
-    			gui_updateShuffleButton(false);
+            }
+            if(jsonMsg.data.mode === "Repeat")
+        	{
+            }
 		break;
     }
 }
@@ -247,7 +223,7 @@ function pausePlaying() {
 }
 
 function nextTrack() {
-    wsConn.send('{ "cmd" : "nextTrack", "data" : {}}');
+    wsConn.send('{ "cmd" : "nextTrack", "data" : {  "shuffle": false }}');
 }
 
 function previousTrack() {
@@ -341,8 +317,8 @@ function handleProgressClick(e) {
     <i id="btnPause" onclick="pausePlaying()" class="material-icons">pause_circle_outline</i></a>
     <i id="btnNext" onclick="nextTrack()" class="material-icons">skip_next</i></a>
     <div id="playback_mode_area">
-        <i id="btnRepeat" onclick="gui_setPlaybackMode('repeat')" class="material-icons hidden">repeat</i>
-        <i id="btnShuffle" onclick="gui_setPlaybackMode('shuffle')" class="material-icons">shuffle</i>
+        <i id="btnRepeat" onclick="gui_btnRepeatClick('repeat')" class="material-icons hidden">repeat</i>
+        <i id="btnShuffle" onclick="gui_btnShuffleClick()" class="material-icons">shuffle</i>
     </div>
 </div>
 

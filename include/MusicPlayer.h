@@ -47,7 +47,7 @@ private:
     PlaylistUpdater * playlistUpdater;
     
     bool stop();
-    bool nextTrack();
+    bool nextTrack(bool shuffled);
     bool previousTrack();
 
 public:
@@ -62,7 +62,7 @@ public:
     bool startPlayback();
     bool stopPlayback();
     bool pausePlayback();
-    bool playNext();
+    bool playNext(bool shuffled);
     bool playPrevious();
     bool playTrackFromCurrentListWithIndex(unsigned int index);
     bool setVolume(unsigned int vol);
@@ -74,6 +74,7 @@ public:
     bool setPlaybackMode(PlaybackMode mode);
     
     bool addPlaylist(const std::shared_ptr<Playlist> playlist);
+    std::shared_ptr<Playlist> getPlaylist(const std::string & playlist_id) const;
     
     bool updatePlaylists();
     

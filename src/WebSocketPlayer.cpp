@@ -81,7 +81,7 @@ void WebSocketPlayer::initCommandEndpoint() {
         
         std::string command = clientRequest["cmd"].asString();
         Json::Value data = clientRequest["data"];
-        
+
         if(command.compare("stop") == 0)
         {
             responseJson = stop();
@@ -125,6 +125,32 @@ void WebSocketPlayer::initCommandEndpoint() {
             responseJson["error"] = 0;
             responseJson["data"]["status"] = "playlists";
             responseJson["data"]["playlists"] = Utils::playlistsToJson(player.getPlaylists());
+        }
+        else if(command.compare("get_single_playlist") == 0)
+        {
+        	/**
+			 * Data format: { "playlist_id" : "some_valid_playlist_id" }
+			 */
+        	if(data.isMember("playlist_id"))
+        	{
+				try
+				{
+					auto playlistPtr = player.getPlaylist(data["playlist_id"].asString());
+					responseJson["error"] = 0;
+					responseJson["data"]["status"] = "get_single_playlist";
+					responseJson["data"]["playlist"] = playlistPtr->getJson();
+				}
+				catch(std::out_of_range & ex)
+				{
+					responseJson["error"] = 1;
+					responseJson["data"]["errorCode"] = "PLAYLIST_NOT_FOUND";
+				}
+        	}
+        	else
+        	{
+        		responseJson["error"] = 1;
+				responseJson["data"]["errorCode"] = "MALFORMED_REQUEST";
+        	}
         }
         else if(command.compare("add_playlist") == 0)
         {
@@ -211,7 +237,17 @@ void WebSocketPlayer::initCommandEndpoint() {
         }
         else if(command.compare("nextTrack") == 0)
         {
-            responseJson = nextTrack();
+        	/**
+			 * Data format: { "shuffle" : true/false }
+			 */
+			if(data.isMember("shuffle"))
+			{
+				responseJson = nextTrack(data["shuffle"].asBool());
+			}
+			else
+			{
+				responseJson = nextTrack(false);
+			}
         }
         else if(command.compare("previousTrack") == 0)
         {
@@ -311,9 +347,9 @@ Json::Value WebSocketPlayer::pause() {
     return responseJson;
 }
 
-Json::Value WebSocketPlayer::nextTrack() {
+Json::Value WebSocketPlayer::nextTrack(bool shuffle) {
     Json::Value responseJson;
-    if(player.playNext())
+    if(player.playNext(shuffle))
     {
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "next_track";
@@ -397,9 +433,9 @@ Json::Value WebSocketPlayer::setPlaybackMode(const std::string & mode) {
     Json::Value responseJson;
     bool success = false;
     //Find out the given playback mode
-    if(mode.compare("Shuffle") == 0)
+    if(mode.compare("Repeat") == 0)
     {
-        success = player.setPlaybackMode(Shuffle);
+        success = player.setPlaybackMode(Repeat);
     }
     else if(mode.compare("Normal") == 0)
     {
@@ -435,10 +471,6 @@ Json::Value WebSocketPlayer::getPlaybackInfo() {
     
     switch(info.playbackMode)
     {
-        case Shuffle:
-            pbInfo["playback_mode"] = "shuffle";
-            break;
-            
         case Repeat:
             pbInfo["playback_mode"] = "repeat";
             break;
