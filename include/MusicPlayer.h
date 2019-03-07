@@ -47,7 +47,7 @@ private:
     PlaylistUpdater * playlistUpdater;
     
     bool stop();
-    bool nextTrack(bool shuffled);
+    bool nextTrack();
     bool previousTrack();
 
 public:
@@ -62,7 +62,7 @@ public:
     bool startPlayback();
     bool stopPlayback();
     bool pausePlayback();
-    bool playNext(bool shuffled);
+    bool playNext();
     bool playPrevious();
     bool playTrackFromCurrentListWithIndex(unsigned int index);
     bool setVolume(unsigned int vol);

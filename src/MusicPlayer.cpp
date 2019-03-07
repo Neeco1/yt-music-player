@@ -126,19 +126,23 @@ bool MusicPlayer::pausePlayback() {
     return false;
 }
 //public
-bool MusicPlayer::playNext(bool shuffled) {
+bool MusicPlayer::playNext() {
     nextPressed = true;
-    return nextTrack(shuffled);
+    return nextTrack();
 }
 //private
-bool MusicPlayer::nextTrack(bool shuffled) {
+bool MusicPlayer::nextTrack() {
     if(!currentPlaylist) { return false; }
     
     //Only go to next if we are currently playing
     //if(playbackState == Playing)
     //{
+    bool shuffled = false;
+    if(playbackMode == Shuffle) shuffled = true;
+
     auto nextTrack = currentPlaylist->nextTrack(shuffled);
     if(!nextTrack) { return false; }
+
     MPV_Controller::playMedia(nextTrack->getUrl());
     return true;
     //}
@@ -226,12 +230,16 @@ PlaybackState MusicPlayer::getPlaybackState() const {
 
 bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {
     if(!currentPlaylist) { return false; }
-    this->playbackMode = mode;
+    this->playbackMode = mode; // Set playback mode in player
     
     if(playbackMode == Normal)
     {
     	//TODO
     }
+    else if(playbackMode == Shuffle)
+	{
+		//TODO
+	}
     else if(playbackMode == Repeat)
     {
     	//TODO
@@ -357,7 +365,7 @@ void MusicPlayer::onEvent(FileEndPlayingEvent & e) {
         newPlaylistSelected = false;
         return;
     }
-    nextTrack(false);
+    nextTrack();
 }
 
 void MusicPlayer::onEvent(PlaybackTimeUpdatedEvent & e) {

@@ -237,17 +237,7 @@ void WebSocketPlayer::initCommandEndpoint() {
         }
         else if(command.compare("nextTrack") == 0)
         {
-        	/**
-			 * Data format: { "shuffle" : true/false }
-			 */
-			if(data.isMember("shuffle"))
-			{
-				responseJson = nextTrack(data["shuffle"].asBool());
-			}
-			else
-			{
-				responseJson = nextTrack(false);
-			}
+        	responseJson = nextTrack();
         }
         else if(command.compare("previousTrack") == 0)
         {
@@ -347,9 +337,9 @@ Json::Value WebSocketPlayer::pause() {
     return responseJson;
 }
 
-Json::Value WebSocketPlayer::nextTrack(bool shuffle) {
+Json::Value WebSocketPlayer::nextTrack() {
     Json::Value responseJson;
-    if(player.playNext(shuffle))
+    if(player.playNext())
     {
         responseJson["error"] = 0;
         responseJson["data"]["status"] = "next_track";
@@ -433,7 +423,11 @@ Json::Value WebSocketPlayer::setPlaybackMode(const std::string & mode) {
     Json::Value responseJson;
     bool success = false;
     //Find out the given playback mode
-    if(mode.compare("Repeat") == 0)
+    if(mode.compare("Shuffle") == 0)
+    {
+    	success = player.setPlaybackMode(Shuffle);
+    }
+    else if(mode.compare("Repeat") == 0)
     {
         success = player.setPlaybackMode(Repeat);
     }
@@ -469,17 +463,23 @@ Json::Value WebSocketPlayer::getPlaybackInfo() {
     pbInfo["track_duration"] = info.duration;
     pbInfo["track_playback_time"] = info.playbackTime;
     
+    std::string mode;
     switch(info.playbackMode)
     {
+    	case Shuffle:
+    		mode = "shuffle";
+    		break;
+
         case Repeat:
-            pbInfo["playback_mode"] = "repeat";
+            mode = "repeat";
             break;
             
         case Normal:
         default:
-            pbInfo["playback_mode"] = "normal";
+            mode = "normal";
             break;
     }
+    pbInfo["playback_mode"] = mode;
     
     Json::Value responseJson;
     responseJson["error"] = 0;

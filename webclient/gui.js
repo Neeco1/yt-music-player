@@ -223,6 +223,15 @@ function gui_updatePlaybackState(playbackInfo) {
         var track_rows = document.getElementsByClassName("track_row");
         [].forEach.call(track_rows, function (row) { row.classList.remove("playing"); });
     }
+
+    // Update shuffle button
+    if(playbackInfo.playback_mode === "shuffle")
+    {
+        if(!btnShuffle.classList.contains("stateActive"))
+        {
+            btnShuffle.classList.add("stateActive");
+        } 
+    }
     oldPlaybackInfo = playbackInfo;
 }
 
@@ -350,7 +359,8 @@ function gui_btnRepeatClick() {
 }
 
 function gui_btnShuffleClick() {
-    wsConn.send('{ "cmd" : "nextTrack", "data" : { "shuffle": true }}');
+    wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Shuffle" }}');
+    wsConn.send('{ "cmd" : "nextTrack" }');
 }
 
 function gui_loadPlaylistDataToOverlay(playlist) {

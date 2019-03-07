@@ -43,7 +43,7 @@ public:
     Json::Value stop();
     Json::Value start();
     Json::Value pause();
-    Json::Value nextTrack(bool shuffle);
+    Json::Value nextTrack();
     Json::Value previousTrack();
     
     Json::Value setVolume(unsigned int percentage);
