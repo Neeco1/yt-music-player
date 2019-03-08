@@ -24,6 +24,30 @@ Currently the player supports only youtube tracks and playlists. Feel free to ad
 - ``make``
 - ``./MusicPlayerService`` (or run it in a [`screen`](https://wiki.ubuntuusers.de/Screen/) to put it in background)
 
+## Setup of a systemctl entry
+
+```
+# Create a systemctl configuration file for musicplayer
+sudo nano /etc/systemd/system/musicplayer.service
+```
+
+```
+[Unit]
+Description=musicplayer
+After=network.target
+
+[Service]
+ExecStart=/home/username/repository/build/MusicPlayerService
+WorkingDirectory=/home/username/repository/build/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ## Developers
 
 ### Websocket API for Communication
