@@ -31,6 +31,7 @@ Currently the player supports only youtube tracks and playlists. Feel free to ad
 sudo nano /etc/systemd/system/musicplayer.service
 ```
 
+Input this into the file:
 ```
 [Unit]
 Description=musicplayer
@@ -46,6 +47,22 @@ User=pi
 
 [Install]
 WantedBy=multi-user.target
+```
+
+Test and then enable the service by using:
+```
+# Start the service
+sudo systemctl start musicplayer
+# Check the status
+systemctl status musicplayer
+# Enable it
+sudo systemctl enable musicplayer.service
+
+# For stopping, you call
+sudo systemctl stop musicplayer
+
+# Viewing the log of musicplayer
+sudo journalctl -u musicplayer.service -f
 ```
 
 ## Developers
