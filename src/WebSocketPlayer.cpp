@@ -217,7 +217,6 @@ void WebSocketPlayer::initCommandEndpoint() {
         }
         else if(command.compare("set_playback_mode") == 0)
         {
-
             /**
              * Data format: { "mode" : "some_valid_mode" }
              */
@@ -422,19 +421,23 @@ Json::Value WebSocketPlayer::selectPlaylist(std::string playlist_id) {
 Json::Value WebSocketPlayer::setPlaybackMode(const std::string & mode) {
     Json::Value responseJson;
     bool success = false;
+
+    static int run = 0;
+
     //Find out the given playback mode
     if(mode.compare("Shuffle") == 0)
     {
-    	success = player.setPlaybackMode(Shuffle);
+    	success = player.setPlaybackMode(PlaybackMode::Shuffle);
     }
     else if(mode.compare("Repeat") == 0)
     {
-        success = player.setPlaybackMode(Repeat);
+        success = player.setPlaybackMode(PlaybackMode::Repeat);
     }
     else if(mode.compare("Normal") == 0)
     {
-        success = player.setPlaybackMode(Normal);
+        success = player.setPlaybackMode(PlaybackMode::Normal);
     }
+    ++run;
     
     //Check if mode was valid and successful
     if(success)
@@ -467,16 +470,16 @@ Json::Value WebSocketPlayer::getPlaybackInfo() {
     switch(info.playbackMode)
     {
     	case Shuffle:
-    		mode = "shuffle";
+    		mode = "Shuffle";
     		break;
 
         case Repeat:
-            mode = "repeat";
+            mode = "Repeat";
             break;
             
         case Normal:
         default:
-            mode = "normal";
+            mode = "Normal";
             break;
     }
     pbInfo["playback_mode"] = mode;

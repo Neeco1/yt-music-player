@@ -186,11 +186,6 @@ function handleWsMessage(e) {
         break;
         
         case "playback_mode_set":
-        	if(jsonMsg.data.mode === "Normal")
-        	{
-        		gui_updateShuffleButton(false);
-        		return;
-            }
             if(jsonMsg.data.mode === "Repeat")
         	{
             }

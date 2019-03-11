@@ -218,7 +218,7 @@ PlaybackInfo MusicPlayer::getPlaybackInfo() const {
         info.trackId = track->getTrackId();
         info.playbackTime = currentPlaybackTime;
         info.duration = track->getDurationSeconds();
-        info.playbackMode = playbackMode;
+        info.playbackMode = this->playbackMode;
         info.thumbUrl = track->getThumbUrl();
     }    
     return info;
@@ -231,14 +231,14 @@ PlaybackState MusicPlayer::getPlaybackState() const {
 bool MusicPlayer::setPlaybackMode(PlaybackMode mode) {
     if(!currentPlaylist) { return false; }
     this->playbackMode = mode; // Set playback mode in player
-    
+
     if(playbackMode == Normal)
     {
-    	//TODO
+        //TODO
     }
     else if(playbackMode == Shuffle)
 	{
-		//TODO
+        //TODO
 	}
     else if(playbackMode == Repeat)
     {

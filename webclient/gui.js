@@ -225,12 +225,16 @@ function gui_updatePlaybackState(playbackInfo) {
     }
 
     // Update shuffle button
-    if(playbackInfo.playback_mode === "shuffle")
+    if(0 == playbackInfo.playback_mode.localeCompare("Shuffle"))
     {
         if(!btnShuffle.classList.contains("stateActive"))
         {
             btnShuffle.classList.add("stateActive");
         } 
+    }
+    else if(0 == playbackInfo.playback_mode.localeCompare("Normal"))
+    {
+        btnShuffle.classList.remove("stateActive");
     }
     oldPlaybackInfo = playbackInfo;
 }
@@ -359,8 +363,14 @@ function gui_btnRepeatClick() {
 }
 
 function gui_btnShuffleClick() {
-    wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Shuffle" }}');
-    wsConn.send('{ "cmd" : "nextTrack" }');
+    if(0 == playbackInfo.playback_mode.localeCompare("Normal"))
+    {
+        wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Shuffle" }}');
+    }
+    else if(0 == playbackInfo.playback_mode.localeCompare("Shuffle"))
+    {
+        wsConn.send('{ "cmd" : "set_playback_mode", "data" : { "mode" : "Normal" }}');
+    }
 }
 
 function gui_loadPlaylistDataToOverlay(playlist) {
