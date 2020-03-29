@@ -17,7 +17,7 @@ Currently the player supports only youtube tracks and playlists. Feel free to ad
 ## Setup
 - First: ``sudo apt-get update && sudo apt-get upgrade``
 - Install necessary packages: ``sudo apt-get install -y python python3-pip mpv socat libboost-all-dev cmake``
-- Install youtube-dl: ``pip install youtube-dl``
+- Install youtube-dl: ``sudo curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl`` and ``sudo chmod a+rx /usr/local/bin/youtube-dl``
 - Go to directory of the repository: ``git clone https://github.com/Neeco1/yt-music-player`` and ``cd yt-music-player``
 - ``mkdir build && cd build``
 - ``cmake ..``
